@@ -1,0 +1,26 @@
+-------------------------TODO--------------------------
+- auch backuppen: GRUB configurations, chrome bookmarks, savefiles steam etc (pc; maybe auch lappi?)
+- code refactoren + kommentieren
+- gehen auch files mit leerzeichen/umlaute im namen?
+- generell n extra fenster für settings?
+	- log path ändern
+	- robocopy effektiver machen (Mehr threads? wie viele?) (var threads mit max. editierbar)
+	- delete quatsch bei backup auch zu clean auslagern? (Limit var in view editieren)
+- vllt nicht aktuellste 3 backup, sondern auch ein altes oder so; mehr backups als 3 speichern?
+
+- mit extra cmd arg für ohne gui und auto beenden
+
+- papa schicken, wenn fertig
+
+
+
+Ideen:
+- Papierkorb löschen option hinzufügen -> zusätzliche Optionen für alle Tasks hinzufügen
+- clean() fixen + ausprobieren
+- executor.py/virus_scan: mehr drives scannen?
+- make DISM RestoreHealth optional
+- wie SSD drive rausfinden? + SSD vor backup auf lappi/Programmieren kopieren
+- executor.py: itunes_backup() machen 
+- was outputen bei virenscan? (da gibt's z.B. /log; s. avkcmd.exe /?)
+- executor.py: tasks aneinander ketten -> auf PC Probedurchlauf
+- auf lappi ausprobieren (dauert lange)
