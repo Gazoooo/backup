@@ -1,20 +1,23 @@
 -------------------------TODO--------------------------
-- auch backuppen: GRUB configurations, chrome bookmarks, savefiles steam etc (pc; maybe auch lappi?)
+- bei pc hängt er manchmal bei chrome_path
+- cleanup: auch alle subprocesses killen
 - code refactoren + kommentieren
+
 - gehen auch files mit leerzeichen/umlaute im namen?
 - generell n extra fenster für settings?
 	- log path ändern
 	- robocopy effektiver machen (Mehr threads? wie viele?) (var threads mit max. editierbar)
 	- delete quatsch bei backup auch zu clean auslagern? (Limit var in view editieren)
-- vllt nicht aktuellste 3 backup, sondern auch ein altes oder so; mehr backups als 3 speichern?
-
-- mit extra cmd arg für ohne gui und auto beenden
 
 - papa schicken, wenn fertig
 
+- auch backuppen: GRUB configurations, savefiles steam etc (pc; maybe auch lappi?)
+- vllt nicht aktuellste 3 backup, sondern auch ein altes oder so; mehr backups als 3 speichern?
+- mit extra cmd arg für ohne gui und auto beenden
 
 
-Ideen:
+
+--------------IDEEN------------------------------------
 - Papierkorb löschen option hinzufügen -> zusätzliche Optionen für alle Tasks hinzufügen
 - clean() fixen + ausprobieren
 - executor.py/virus_scan: mehr drives scannen?
