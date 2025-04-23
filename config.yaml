@@ -1,0 +1,78 @@
+hosts_map:
+- hostname: gustavs-laptop-ubuntu
+  info:
+    last_selected_dest: /media/user/Extreme Pro/Backups/devices
+    mac: not used
+    name: not used
+  paths:
+    backup_paths:
+    - Desktop/Programmieren
+    - Desktop/Arbeit
+    - Desktop/Icons_Linux
+    - Desktop/Uni_tmp
+    - Desktop/Linux_Help.txt
+    - /home/user/.config/Code/User
+    - /home/user/.vscode/extensions
+    clean_paths:
+    - /tmp
+    - .cache
+    - /var/tmp
+    - /var/log/
+    - ~/.local/share/Trash/
+    dest_paths:
+    - /media/user/Extreme Pro/Backups/devices
+    - /media/user/smb_raspberrypi/home/gazo/Desktop/cloud/Backups/devices
+- hostname: gustavs-laptop-windows
+  info:
+    last_selected_dest: D:/Backups/devices
+    mac: not used
+    name: not used
+  paths:
+    backup_paths:
+    - Desktop/Uni
+    - Desktop/Icons_Windows
+    - Desktop/LaTex
+    - Documents/Electronic Arts/Die Sims 4
+    - C:/signs
+    clean_paths:
+    - C:/WINDOWS/Temp
+    - AppData/Local/Temp
+    - Downloads
+    - $Recycle.Bin
+    - Pictures/Screenshots
+    dest_paths:
+    - /media/user/Extreme Pro/Backups/devices
+    - F:/Backups/devices
+    - D:/Backups/devices
+- hostname: gustavs-pc-windows
+  info:
+    last_selected_dest: F:/Backups/devices
+    mac: not used
+    name: not used
+  paths:
+    backup_paths:
+    - Desktop/Sonstiges
+    - C:/Users/user/Desktop/Freizeit
+    - C:/Users/user/Desktop/Finanzen
+    - C:/Users/user/AppData/Local/Google/Chrome/User Data/Default
+    clean_paths:
+    - C:/WINDOWS/Temp
+    - AppData/Local/Temp
+    - Downloads
+    - $Recycle.Bin
+    - Pictures/Screenshots
+    dest_paths:
+    - /media/user/Extreme Pro/Backups/devices
+    - F:/Backups/devices
+- hostname: test
+  info:
+    mac: not used
+    name: not used
+  paths:
+    backup_paths:
+    - /home/user/Downloads
+    clean_paths: []
+    dest_paths:
+    - /home/user
+    - /home/user/Desktop
+    - /home/user/Pictures

@@ -1,0 +1,42 @@
+# ==========================
+# VS Code Settings
+# ==========================
+.vscode/                 # Ignore VS Code specific settings and workspace files
+
+# ==========================
+# Python: Bytecode & Cache
+# ==========================
+__pycache__/             # Python bytecode files
+*.pyc                    # Compiled Python files
+*.pyo                    # Optimized Python files
+*.pyd                    # Python DLL files
+
+# ==========================
+# Virtual Environments
+# ==========================
+.env/                    # Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# ==========================
+# Personal Idea Files
+# ==========================
+*ideas.txt               # All files ending with "ideas.txt"
+*Ideen.txt               # All files ending with "Ideen.txt"
+
+# ==========================
+# Miscellaneous Junk
+# ==========================
+*.log                    # Log files
+*.tmp                    # Temporary files
+*.bak                    # Backup files
+*.swp                    # Swap files (e.g., from Vim)
+*~                       # Backup files (e.g., from text editors)
+
+# ==========================
+# OS Specific Files
+# ==========================
+.DS_Store                # macOS files that are not relevant
+Thumbs.db                # Windows thumbnails
