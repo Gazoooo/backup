@@ -15,7 +15,14 @@ from device_communicator import DeviceCommunicator
 
 
 class View:
+    """
+    Main class to handle the GUI for the PC Utils application. It includes setup for tasks, folder management,
+    and user settings. It also provides interaction with system-level operations such as backups and virus scans.
+    """
     def __init__(self): 
+        """
+        Initializes the View class by setting up logging, user settings, and creating the graphical user interface (GUI).
+        """
         #create log
         dc = DeviceCommunicator()
         self.hostname = dc.get_hostname()
@@ -55,7 +62,10 @@ class View:
         
         
         
-    def create_style(self) :
+    def create_style(self):
+        """
+        Creates custom styles for the tkinter widgets, such as colors and font styling.
+        """
         #colors (#dark to light in lists)
         self.color_palette = ["#4D2D18", "#8A6240", "#CABA9C"] 
         self.lightred = "#FF474C"
@@ -66,6 +76,9 @@ class View:
         self.style.configure("Custom.TCheckbutton", font=("Arial", 16), background="brown", foreground="white") 
         
     def create_guiElements(self):
+        """
+        Creates the GUI elements (frames, buttons, labels, checkboxes) and sets their behavior.
+        """
         #self.last_made_clear_temp = self.last_made_check_smartphoneBackup = self.last_made_check_virusScan = self.last_made_check_healthScan = self.last_made_check_fileBackup = tk.StringVar
         #print(self.last_made_clear_temp)
         #print(self.last_made_check_healthScan)
@@ -133,6 +146,10 @@ class View:
         self.label_info.place(x=850,y=550)
             
     def go(self):
+        """
+        Prepares the selected tasks by collecting information about the folders to back up, clean, or scan, 
+        then passes the tasks to an executor for execution.
+        """
         self.confirm.config(state="disabled")
         change_text(self.log, "", clear=True)
         
@@ -170,6 +187,9 @@ class View:
         ex.start()
 
     def edit_destDir(self, event=None, mode=None):
+        """
+        Allows the user to select or remove a destination directory for backup. Updates the GUI and YAML file accordingly.
+        """
         self.confirm.config(state="normal")
         match mode:
             case "add":
@@ -209,6 +229,9 @@ BackupPath:\n{selected}
         self.destDir_folders_list.selection_clear()
     
     def edit_folder(self, mode, refList, yaml_key):
+        """
+        Allows the user to add or remove folders from the backup or clean lists, updating the respective GUI list and YAML file.
+        """
         match mode:
             case "add":
                 folder = tk.filedialog.askdirectory(title="Select Folder", parent=self.backupfenster, initialdir=self.userPath)
@@ -223,10 +246,12 @@ BackupPath:\n{selected}
                     refList.delete(index)
                     self.filehandler.update_yaml(yaml_key, path, delete=True)
 
-    #initial 
-    # 2. fill the combobox with destdir list
-    # 1. fill in specific paths for backup/clean
     def data_init(self):
+        """
+        Initial method.
+        # 2. fill the combobox with destdir list
+        # 1. fill in specific paths for backup/clean
+        """
         self.last_destPath_selected = self.info_dict["last_selected_dest"]
         self.destDir_var = tk.StringVar(value=self.last_destPath_selected)
         self.destDir_folders_list['values'] = self.destPaths_list
@@ -240,15 +265,21 @@ BackupPath:\n{selected}
         for path in clean_list:
             self.clean_folders_list.insert(tk.END, path)
             
-    #callback function for executor to be able to update gui log
     def update_log(self, text, tag=None, clear=False, update=False):
-            change_text(self.log, text, tag=tag, clear=clear, update=update)
+        """
+        #callback function for executor to be able to update gui log
+        Updates the confirmation button state to either 'normal' or 'disabled' based on the execution process.
+        """
+        change_text(self.log, text, tag=tag, clear=clear, update=update)
     
-    #callback function for executor to be able to reactivate gui confirm button
     def update_confirm(self):
+        """#callback function for executor to be able to reactivate gui confirm button
+        """
         self.confirm.config(state="normal")
         
     def cleanup(self):
+        """performs a cleanup with atexit()
+        """
         for h in self.logger.handlers:
             h.flush()
             h.close()

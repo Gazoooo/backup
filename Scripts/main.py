@@ -1,4 +1,3 @@
-from device_communicator import DeviceCommunicator
 from view import View
 
 

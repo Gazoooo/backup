@@ -1,53 +1,71 @@
 import os
 from screeninfo import get_monitors
 
-
-
-#helper function to get subdirs so that RD doesnt delete parent
-#ignores files since RD cant delete them
 def get_subdirs(parent_dir):
+    """
+    Returns a list of immediate subdirectories of the given directory.
+
+    This is useful to avoid deleting the parent directory with commands like 'RD' which only support deleting folders.
+
+    Args:
+        parent_dir (str): The path to the directory to scan.
+
+    Returns:
+        list[str]: A list of absolute paths to subdirectories within parent_dir.
+    """
     all_subs = []
     for sub in os.listdir(parent_dir):
         sub_path = os.path.join(parent_dir, sub)
         if os.path.isdir(sub_path):
             all_subs.append(os.path.join(parent_dir, sub))
 
-    norm(all_subs)
+    norm(all_subs)  # assuming you have this function elsewhere
     return all_subs
 
 
-#puts a tkinter window in the middle of the monitor
 def window_in_middle(fenster, breite, hoehe):
-    # get primary monitor
+    """
+    Places a tkinter window in the center of the primary monitor.
+
+    Args:
+        fenster (tk.Tk or tk.Toplevel): The tkinter window instance to move.
+        breite (int): Desired width of the window.
+        hoehe (int): Desired height of the window.
+    """
     monitors = get_monitors()
-    monitor = monitors[0] 
+    monitor = monitors[0]
 
     Breite_Monitor = monitor.width
     Hoehe_Monitor = monitor.height
-    #print(f"{Breite_Monitor}x{Hoehe_Monitor}")
     x = (Breite_Monitor - breite) // 2
     y = (Hoehe_Monitor - hoehe) // 2
     fenster.geometry(f"{breite}x{hoehe}+{int(x)}+{int(y)}")
 
-#tkinter specific convenience method
+
 def change_text(feld, text, tag=None, clear=False, update=False):
-    feld.config(state="normal")  # Textfeld bearbeitbar machen
+    """
+    Changes the content of a tkinter Text widget with optional formatting.
+
+    Args:
+        feld (tk.Text): The text widget to modify.
+        text (str): The text to insert.
+        tag (str, optional): Optional tag for formatting (e.g., color).
+        clear (bool): If True, clears the widget before inserting text.
+        update (bool): If True, updates (replaces) the current line instead of appending.
+    """
+    feld.config(state="normal")  # make editable
     
-    # Löscht den Text, wenn clear=True
     if clear:
         feld.delete('1.0', "end")
     
-    #Aktuelle Zeile updaten
     if update:
-        current_line_start = feld.index("insert linestart - 1 lines")  # Anfang der aktuellen Zeile
-        current_line_end = feld.index("insert lineend")  # Ende der aktuellen Zeile
-        #print(current_line_start, current_line_end)
-        feld.delete(current_line_start, current_line_end)  # Löscht die aktuelle Zeile
+        current_line_start = feld.index("insert linestart - 1 lines")
+        current_line_end = feld.index("insert lineend")
+        feld.delete(current_line_start, current_line_end)
         
-    # Text einfügen
     if tag:
         feld.insert("end", f"{text}\n", tag)
     else:
         feld.insert("end", f"{text}\n")
     
-    feld.config(state="disabled")  # Textfeld wieder nur lesbar machen
+    feld.config(state="disabled")  # make read-only again
