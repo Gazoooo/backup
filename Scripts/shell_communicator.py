@@ -1,4 +1,5 @@
 import re
+import signal
 import subprocess
 import logging
 import os
@@ -16,6 +17,7 @@ class ShellCommunicator:
             os_type (str): The operating system type ('linux' or 'windows').
         """
         self.logger = logging.getLogger(__name__)
+        self.running_procs = []
         self.os_type = os_type
         threads = os.cpu_count()
         self.threads_to_use = 16
@@ -85,6 +87,7 @@ class ShellCommunicator:
                     process = self._copy_linux(src, dst)
                 case "windows":
                     process = self._copy_windows(src, dst)
+            self.running_procs.append(process)
             return process
         except Exception as e:
             self.logger.error(f"copy(): Error ({e}).")
@@ -103,8 +106,8 @@ class ShellCommunicator:
         """
         if os.path.isdir(src):
             pass
-        cmd = ["rsync", "--mkpath", "-avz", "--info=progress2", src, dst]
-        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        cmd = ["rsync", "--mkpath", "-avz", "--info=progress2", "--no-perms", "--delete", "--inplace", "--copy-unsafe-links", src, dst]
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, preexec_fn=os.setsid)
         return process
 
     def _copy_windows(self, src, dst):
@@ -120,8 +123,8 @@ class ShellCommunicator:
         """
         if os.path.isdir(src):
             dst = os.path.join(dst, os.path.basename(src))
-        cmd = ["robocopy", src, dst, "/E", "/Z", f"/MT:{self.threads_to_use}"]
-        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8', errors='replace')
+        cmd = ["robocopy", src, dst, "/B", "/E", "/Z", f"/MT:{self.threads_to_use}", "/MIR"]
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8', errors='replace', preexec_fn=os.setsid)
         return process
 
     def parse_progress(self, line, copied_files, total_files):
@@ -175,3 +178,19 @@ class ShellCommunicator:
             file_percent = int(match.group(1))
             total_percent = (file_percent / 100 / total_files + (copied_files - 1) / total_files) * 100
             return total_percent
+
+    def stop_all_processes(self):
+        """
+        Stops all running processes.
+        """
+        self.logger.debug("Stopping all processes...")
+        try:
+            for proc in self.running_procs:
+                if proc:
+                    if proc.poll() is None: #does process live?
+                        os.killpg(os.getpgid(proc.pid), signal.SIGINT)  # Send Ctrl+C signal to the subprocess
+                        proc.wait()  # Wait for the subprocess to finish
+                        self.logger.debug(f"Stopped process {proc.pid}")
+        except Exception as e:
+            self.logger.error(f"stop_all_processes(): {e}.")
+            raise e

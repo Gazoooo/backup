@@ -15,13 +15,14 @@ class Executor:
         Args:
             subprocesshandler: Handler for subprocess-based operations like copy and delete.
             update_text_callback: Function to update the text area in the view.
-            update_confirm_callback: Function to signal task completion in the view.
+            update_confirm_callback: Function to signal task execution in the view.
         """
         self.logger = logging.getLogger(__name__)
         self.subprocesshandler = subprocesshandler
         self.update_text = update_text_callback
         self.update_confirm = update_confirm_callback
         self.global_error = False
+        self.stop = False
         
     def set_details(self, task_infos):
         """Sets task-specific details for the executor.
@@ -33,25 +34,38 @@ class Executor:
 
     def execute(self):
         """Executes all tasks provided in `task_infos` sequentially."""
-        self.global_error = False
-        self.update_text("", clear=True)
-        total_tasks = len(self.task_infos)
-        for current, task in enumerate(self.task_infos, start=1):
-            self.update_text(f"Now executing Task {current}/{total_tasks}...")
-            match task:
-                case "clean":
-                    self.clean()
-                case "smartphone_backup":
-                    self.smartphone_backup()
-                case "virus_scan":
-                    self.virus_scan()
-                case "health_scan":
-                    self.health_scan()
-                case "file_backup":
-                    self.file_backup()  
-        if not self.global_error:   
-            self.update_text(f"Finished every task.", "success")
-            self.update_confirm()        
+        try:
+            self.global_error = False
+            total_tasks = len(self.task_infos)
+            for current, task in enumerate(self.task_infos, start=1):
+                if self.stop:
+                    return
+                self.update_text(f"Now executing Task {current}/{total_tasks}...")
+                match task:
+                    case "clean":
+                        self.clean()
+                    case "smartphone_backup":
+                        self.smartphone_backup()
+                    case "virus_scan":
+                        self.virus_scan()
+                    case "health_scan":
+                        self.health_scan()
+                    case "file_backup":
+                        self.file_backup()  
+                        
+            if self.stop:
+                self.update_text("Stopped all tasks.", "success")
+                self.stop = False
+                
+            elif not self.global_error:   
+                self.update_text(f"Finished every task.", "success")
+                
+            self.update_confirm() 
+            self.globsal_error = False
+            
+        except Exception as e:    
+            print(f"execute(): {e}")   
+
 
     def clean(self):
         """Deletes the contents of directories specified in `task_infos["clean"]`."""
@@ -142,13 +156,17 @@ class Executor:
                 
             # make new backup
             total_dirs_toBackup = len(backup_paths)
+            self.update_text("---")
             for dirNum, dir in enumerate(backup_paths):
+                if self.stop:
+                    return
                 with self.subprocesshandler.copy(dir, dest_dir) as process:
                     total_files = sum(len(files) for _, _, files in os.walk(dir))
                     copied_files = 0
                     last_percent = -1 
 
                     for line in process.stdout:
+                        #print(line)
                         if re.search(r'\t[A-Z]:\\.*', line):  # robocopy: begins to copy new file
                             copied_files += 1
                         if '%' in line:
@@ -157,14 +175,15 @@ class Executor:
                                 last_percent = percent
                                 self.update_text(f"Copying: {percent:.2f}% (Directory: {dirNum+1}/{total_dirs_toBackup})", update=True)
                     for line in process.stderr:
-                        self.logger.error("copy:", line.strip())
+                        self.logger.error(f"copy: {line.strip()}")
 
                     return_code = process.wait()
                     if return_code != 0:
                         self.logger.warning(f"Returncode is {return_code} (!= 0).")
-                                
-            self.logger.info("File Backup ended successfull")
-            self.update_text(f"File Backup ended successfull", "success")
+            
+            if not self.stop:       
+                self.logger.info("File Backup ended successfull")
+                self.update_text(f"File Backup ended successfull", "success", update=True)
         
         except Exception as e:
             self.global_error = True
@@ -175,3 +194,10 @@ class Executor:
         """Starts the task execution in a separate thread to keep the GUI responsive."""
         executor_thread = threading.Thread(target=self.execute)
         executor_thread.start()
+
+    def stop_tasks(self):
+        """Stops all running tasks."""
+        self.logger.info("Stopping all tasks...")
+        self.update_text("Stopping, please wait...", "warning")
+        self.subprocesshandler.stop_all_processes()
+        self.stop = True

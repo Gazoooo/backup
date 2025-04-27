@@ -46,21 +46,19 @@ class View:
             self.filehandler.add_Host()
             
         #create gui
-        
         self.backupfenster = tk.Tk()
         self.create_style()
         self.backupfenster.configure(bg=self.color_palette[0])
         self.backupfenster.title("PC Utils")
         window_in_middle(self.backupfenster,1500,800)
         self.create_guiElements()
+        self.filehandler.set_callback(self.update_log)
         atexit.register(self.cleanup)
         self.destDir_folders_list.bind("<<ComboboxSelected>>", self.edit_destDir)
         
         #set user settings from yaml
         self.info_dict, self.backupPaths_list, self.destPaths_list = self.filehandler.get_userContent()
         self.data_init()
-        
-        
         
     def create_style(self):
         """
@@ -135,6 +133,9 @@ class View:
 
         self.confirm = tk.Button(self.subframe_choosing_task, text ="Execute tasks",bg="green", command=self.go)
         self.confirm.place(x=10,y=550)
+        self.stop = tk.Button(self.subframe_choosing_task, text="Stop tasks", bg="red", command=self.stop_tasks)
+        self.stop.place(x=150,y=550)
+        self.stop.config(state="disabled")
 
         self.log = tk.Text(self.backupfenster, state="disabled", width=75, height=30)
         self.log.place(x=850,y=10)
@@ -151,6 +152,7 @@ class View:
         then passes the tasks to an executor for execution.
         """
         self.confirm.config(state="disabled")
+        self.stop.config(state="normal")
         change_text(self.log, "", clear=True)
         
         try:
@@ -166,12 +168,10 @@ class View:
             if self.check_healthScan.instate(['selected']):
                 task_infos["health_scan"] = {"None": "None"}
             if self.check_fileBackup.instate(['selected']):
-                self.backupPath = self.filehandler.create_backupPath()
-                self.backupPaths_list = self.filehandler.construct_absolute_paths(self.backupPaths_list)
                 task_infos["file_backup"] = {
-                    "dstPath": self.backupPath,
-                    "backupPaths": self.backupPaths_list,
-                    "to_delete": self.filehandler.check_deletable("backup")
+                    "to_delete": self.filehandler.check_deletable("backup"),
+                    "backupPaths": self.filehandler.construct_absolute_paths(self.backupPaths_list),
+                    "dstPath": self.filehandler.create_backupPath()
                 }
         except Exception as e:
             self.logger.error(f"go: {e}")
@@ -181,10 +181,10 @@ class View:
         change_text(self.log, "Successfully prepared everything.", "success")
 
         #start executor to execute tasks
-        sc = ShellCommunicator(self.osType)
-        ex = Executor(sc, self.update_log, self.update_confirm)
-        ex.set_details(task_infos)
-        ex.start()
+        self.sc = ShellCommunicator(self.osType)
+        self.ex = Executor(self.sc, self.update_log, self.update_confirm)
+        self.ex.set_details(task_infos)
+        self.ex.start()
 
     def edit_destDir(self, event=None, mode=None):
         """
@@ -213,17 +213,18 @@ class View:
                     self.filehandler.update_yaml("paths.dest_paths", curDir, delete=True)
                     
         selected = self.destDir_folders_list.get() 
-        if not os.path.exists(selected):
-            change_text(self.log, "This path doesn't exists, ignored it!", "warning")
-            self.confirm.config(state="disabled")
-        else:
-            self.destDir_var.set(selected)
-            details_string = f"""\
+        if selected != "Choose your DestDir...": #something is selected
+            if not os.path.exists(selected):
+                change_text(self.log, f"The selected path '{selected}' doesn't exists, ignored it!", "warning")
+                self.confirm.config(state="disabled")
+            else:
+                self.destDir_var.set(selected)
+                details_string = f"""\
 Device-Name: {self.hostname}
 BackupPath:\n{selected}
-        """
-            self.label_info.config(text=details_string)
-            self.filehandler.update_yaml("info.last_selected_dest", selected)
+            """
+                self.label_info.config(text=details_string)
+                self.filehandler.update_yaml("info.last_selected_dest", selected)
             
         self.destDir_folders_list.set("Choose your DestDir...")
         self.destDir_folders_list.selection_clear()
@@ -273,18 +274,29 @@ BackupPath:\n{selected}
         change_text(self.log, text, tag=tag, clear=clear, update=update)
     
     def update_confirm(self):
-        """#callback function for executor to be able to reactivate gui confirm button
+        """callback function for executor to be able to reactivate gui confirm button
         """
         self.confirm.config(state="normal")
+        self.stop.config(state="disabled")
         
     def cleanup(self):
         """performs a cleanup with atexit()
         """
+        self.logger.debug("Cleaning up...")
         for h in self.logger.handlers:
             h.flush()
             h.close()
         
-        self.filehandler.write_yaml()    
+        self.filehandler.write_yaml()  
+        if hasattr(self, 'sc'):
+            self.sc.stop_all_processes() 
+        self.backupfenster.quit()
+        
+    def stop_tasks(self):
+        """Stops all tasks.
+        """
+        if hasattr(self, 'ex'):
+            self.ex.stop_tasks()
         
     def start(self):
         self.backupfenster.mainloop()

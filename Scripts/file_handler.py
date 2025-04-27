@@ -14,6 +14,7 @@ class FileHandler():
         Args:
             hostname (str): The name of the host machine.
             userPath (str): The path provided by the user for destination or backup.
+            update_text_callback: Function to update the text area in the view.
         """
         self.hostname = hostname
         self.userPath = userPath
@@ -234,7 +235,8 @@ class FileHandler():
         today = self.get_date()
 
         for name in os.listdir(path):
-            if name.endswith(".log"):
+            print(name)
+            if name.endswith(".log"): #ignore logs
                 continue
             full_path = os.path.join(path, name)
             try:
@@ -246,7 +248,8 @@ class FileHandler():
             if name.startswith(prefix) and os.path.isdir(full_path):
                 to_delete_dirs.append((date, full_path))
                 if date.strftime("%Y-%m-%d") == today:
-                    self.logger.info(f"Backup from today already exists. Maybe it will be overridden...")
+                    self.update_text(f"Backup from today already exists. Maybe it will be overridden...", "warning")
+                    self.logger.warning(f"Backup from today already exists. Maybe it will be overridden...")
             elif os.path.isfile(full_path):
                 self.logger.warning(f"Standalone file found in '{path}'. There shouldn't be any.")
 
@@ -275,3 +278,8 @@ class FileHandler():
         else:
             raise TypeError("norm: Input must be a string or a list of strings")
 
+
+    # ------------------------------ Other -----------------------------
+    def set_callback(self, callback):
+        """Sets the callback function for updating text."""
+        self.update_text = callback
