@@ -53,19 +53,23 @@ def change_text(feld, text, tag=None, clear=False, update=False):
         clear (bool): If True, clears the widget before inserting text.
         update (bool): If True, updates (replaces) the current line instead of appending.
     """
-    feld.config(state="normal")  # make editable
-    
-    if clear:
-        feld.delete('1.0', "end")
-    
-    if update:
-        current_line_start = feld.index("insert linestart - 1 lines")
-        current_line_end = feld.index("insert lineend")
-        feld.delete(current_line_start, current_line_end)
+    try:
+        feld.config(state="normal")  # make editable
         
-    if tag:
-        feld.insert("end", f"{text}\n", tag)
-    else:
-        feld.insert("end", f"{text}\n")
-    
-    feld.config(state="disabled")  # make read-only again
+        if clear:
+            feld.delete('1.0', "end")
+        
+        if update:
+            current_line_start = feld.index("insert linestart - 1 lines")
+            current_line_end = feld.index("insert lineend")
+            feld.delete(current_line_start, current_line_end)
+            
+        if tag:
+            feld.insert("end", f"{text}\n", tag)
+        else:
+            feld.insert("end", f"{text}\n")
+        
+        feld.config(state="disabled")  # make read-only again
+    except Exception as e:
+        print(f"Error in change_text: {e}")
+

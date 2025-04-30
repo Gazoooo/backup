@@ -9,18 +9,18 @@ from tools import get_subdirs
 # class for executing tasks from view
 # update_callback is a function from view to update its text area
 class Executor:
-    def __init__(self, subprocesshandler, update_text_callback, update_confirm_callback):
+    def __init__(self, subprocesshandler, update_text_callback, update_rdy_callback):
         """Initializes the Executor.
 
         Args:
             subprocesshandler: Handler for subprocess-based operations like copy and delete.
             update_text_callback: Function to update the text area in the view.
-            update_confirm_callback: Function to signal task execution in the view.
+            update_rdy_callback: Function to signal task execution in the view.
         """
         self.logger = logging.getLogger(__name__)
         self.subprocesshandler = subprocesshandler
         self.update_text = update_text_callback
-        self.update_confirm = update_confirm_callback
+        self.update_rdy = update_rdy_callback
         self.global_error = False
         self.stop = False
         
@@ -60,12 +60,11 @@ class Executor:
             elif not self.global_error:   
                 self.update_text(f"Finished every task.", "success")
                 
-            self.update_confirm() 
+            self.update_rdy() 
             self.globsal_error = False
             
         except Exception as e:    
             print(f"execute(): {e}")   
-
 
     def clean(self):
         """Deletes the contents of directories specified in `task_infos["clean"]`."""
@@ -178,8 +177,12 @@ class Executor:
                         self.logger.error(f"copy: {line.strip()}")
 
                     return_code = process.wait()
-                    if return_code != 0:
-                        self.logger.warning(f"Returncode is {return_code} (!= 0).")
+                    self.logger.debug(f"Returncode is {return_code}.")
+                    msg = self.subprocesshandler.get_exitcode("backup", return_code)
+                    if msg:
+                        self.logger.debug(f"=> known!: {msg}")
+                    else:
+                        self.logger.warning(f"=> unknown!")
             
             if not self.stop:       
                 self.logger.info("File Backup ended successfull")

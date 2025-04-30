@@ -26,6 +26,7 @@ class View:
         #create log
         dc = DeviceCommunicator()
         self.hostname = dc.get_hostname()
+        self.hostname = "test" # for testing purposes
         self.osType = dc.get_os()
         self.userPath = dc.get_path("~")
         self.rootPath = dc.get_path("/")
@@ -34,6 +35,7 @@ class View:
             self.filehandler.setup_logger()
         except Exception as e:
             change_text(self.log, f"Couldn't create the log for this session. ({e})\nExiting program in 3s...", "error")
+            self.log.update_idletasks()
             time.sleep(3)
             exit()
         self.logger = logging.getLogger(__name__)
@@ -59,6 +61,7 @@ class View:
         #set user settings from yaml
         self.info_dict, self.backupPaths_list, self.destPaths_list = self.filehandler.get_userContent()
         self.data_init()
+        self.taskRunning = False
         
     def create_style(self):
         """
@@ -169,20 +172,23 @@ class View:
                 task_infos["health_scan"] = {"None": "None"}
             if self.check_fileBackup.instate(['selected']):
                 task_infos["file_backup"] = {
+                    "dstPath": self.filehandler.create_backupPath(),
                     "to_delete": self.filehandler.check_deletable("backup"),
-                    "backupPaths": self.filehandler.construct_absolute_paths(self.backupPaths_list),
-                    "dstPath": self.filehandler.create_backupPath()
+                    "backupPaths": self.filehandler.construct_absolute_paths(self.backupPaths_list)
+                    
                 }
         except Exception as e:
             self.logger.error(f"go: {e}")
             change_text(self.log, "Error at preparing. See 'Task-Log.log' for more information. Exit program in 3s...", "error")
+            self.log.update_idletasks()
             time.sleep(3)
             exit()
         change_text(self.log, "Successfully prepared everything.", "success")
 
         #start executor to execute tasks
+        self.taskRunning = True
         self.sc = ShellCommunicator(self.osType)
-        self.ex = Executor(self.sc, self.update_log, self.update_confirm)
+        self.ex = Executor(self.sc, self.update_log, self.update_rdy)
         self.ex.set_details(task_infos)
         self.ex.start()
 
@@ -206,7 +212,7 @@ class View:
             case "remove":
                 curDir = self.destDir_var.get()
                 values = list(self.destDir_folders_list['values'])
-                if curDir in values:
+                if curDir in values and len(values) > 1:
                     values.remove(curDir)
                     self.destDir_folders_list['values'] = values
                     self.destDir_folders_list.set(values[0])
@@ -273,9 +279,10 @@ BackupPath:\n{selected}
         """
         change_text(self.log, text, tag=tag, clear=clear, update=update)
     
-    def update_confirm(self):
-        """callback function for executor to be able to reactivate gui confirm button
+    def update_rdy(self):
+        """callback function for executor to be able to communicate that it is rdy
         """
+        self.taskRunning = False
         self.confirm.config(state="normal")
         self.stop.config(state="disabled")
         
@@ -286,10 +293,9 @@ BackupPath:\n{selected}
         for h in self.logger.handlers:
             h.flush()
             h.close()
-        
         self.filehandler.write_yaml()  
-        if hasattr(self, 'sc'):
-            self.sc.stop_all_processes() 
+        if self.taskRunning:
+            self.stop_tasks() 
         self.backupfenster.quit()
         
     def stop_tasks(self):

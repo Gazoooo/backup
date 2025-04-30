@@ -22,7 +22,51 @@ class ShellCommunicator:
         threads = os.cpu_count()
         self.threads_to_use = 16
         self.logger.info(f"Using {self.threads_to_use} threads for robocopy. Total amount of threads in system: {threads}.")
+        self.exitcodes_robocopy = {
+            0: "No errors occurred, and no files were copied.",
+            1: "All files were copied successfully.",
+            2: "Some files were copied successfully, but some files were skipped.",
+            3: "Some files were copied successfully, and some files were skipped, but no errors occurred.",
+            5: "Some files could not be copied due to permission issues.",
+            6: "Additional files or directories were detected and not copied.",
+            7: "Files were copied successfully, but some files could not be accessed.",
+            8: "Some files were copied successfully, and some files could not be accessed."
+            
+        }
+        self.exitcodes_rsync = {
+            0: "No errors occurred.",
+            1: "Some files were copied successfully, but some files were skipped.",
+            2: "Some files were copied successfully, and some files were skipped, but no errors occurred.",
+            3: "Some files could not be copied due to permission issues.",
+            4: "Additional files or directories were detected and not copied.",
+            5: "Files were copied successfully, but some files could not be accessed.",
+            19: "Received SIGUSR1 – process was interrupted, likely due to a related process exiting.",
+            20: "Received SIGINT/SIGTERM/SIGHUP – rsync was terminated manually or by system signal."
+        }
 
+    def get_exitcode(self, mode, exitcode):
+        """
+        Returns a human-readable message based on the exit code of the last command.
+
+        Args:
+            exitcode (int): The exit code from the last command.
+            mode (str): The mode of operation ('clean' or 'backup').
+
+        Returns:
+            str: A message describing the exit code when it is in dicrtionary.
+            None: If the exit code is not found in the dictionary.
+            """
+        match mode:
+            case "clean":
+                return NotImplementedError("get_exitcode(): Clean mode not implemented.")
+            case "backup":
+                if self.os_type == "linux":
+                    return self.exitcodes_rsync.get(exitcode, None)
+                elif self.os_type == "windows":
+                    return self.exitcodes_robocopy.get(exitcode, None)
+            case _:
+                raise ValueError(f"get_exitcode(): Unknown mode '{mode}'.")
+        
     def delete(self, dir, is_file=False):
         """
         Deletes a file or directory based on the OS type.
@@ -106,7 +150,7 @@ class ShellCommunicator:
         """
         if os.path.isdir(src):
             pass
-        cmd = ["rsync", "--mkpath", "-avz", "--info=progress2", "--no-perms", "--delete", "--inplace", "--copy-unsafe-links", src, dst]
+        cmd = ["rsync", "--mkpath", "-az", "--info=progress2", "--no-perms", "--delete", "--inplace", "--copy-unsafe-links", src, dst]
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, preexec_fn=os.setsid)
         return process
 

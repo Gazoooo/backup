@@ -1,6 +1,7 @@
 from datetime import datetime
 import logging
 import os
+from pathlib import Path
 import yaml
 from dateutil import parser
 
@@ -247,7 +248,7 @@ class FileHandler():
 
             if name.startswith(prefix) and os.path.isdir(full_path):
                 to_delete_dirs.append((date, full_path))
-                if date.strftime("%Y-%m-%d") == today:
+                if date.strftime("%Y-%m-%d") == today and any(Path(full_path).iterdir()): # ignore if newly created
                     self.update_text(f"Backup from today already exists. Maybe it will be overridden...", "warning")
                     self.logger.warning(f"Backup from today already exists. Maybe it will be overridden...")
             elif os.path.isfile(full_path):

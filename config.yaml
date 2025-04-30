@@ -1,7 +1,7 @@
 hosts_map:
 - hostname: gustavs-laptop-ubuntu
   info:
-    last_selected_dest: /media/user/Extreme Pro/Backups/devices
+    last_selected_dest: /home/user/Desktop/backup_test
     mac: not used
     name: not used
   paths:
@@ -22,6 +22,7 @@ hosts_map:
     dest_paths:
     - /media/user/Extreme Pro/Backups/devices
     - /media/user/smb_raspberrypi/home/gazo/Desktop/cloud/Backups/devices
+    - /home/user/Desktop/backup_test
 - hostname: gustavs-laptop-windows
   info:
     last_selected_dest: D:\Backups\devices
@@ -66,13 +67,14 @@ hosts_map:
     - F:/Backups/devices
 - hostname: test
   info:
+    last_selected_dest: /home/user/Desktop/backup_test
     mac: not used
     name: not used
   paths:
     backup_paths:
-    - /home/user/Downloads
+    - /home/user/Desktop/Arbeit
+    - /home/user/.vscode/extensions
     clean_paths: []
     dest_paths:
-    - /home/user
-    - /home/user/Desktop
-    - /home/user/Pictures
+    - /media/user/smb_raspberrypi/home/gazo/Desktop/cloud/Backups
+    - /home/user/Desktop/backup_test
