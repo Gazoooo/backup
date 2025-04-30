@@ -19,14 +19,20 @@ class View:
     Main class to handle the GUI for the PC Utils application. It includes setup for tasks, folder management,
     and user settings. It also provides interaction with system-level operations such as backups and virus scans.
     """
-    def __init__(self): 
+    def __init__(self, testing=False, fast=False): 
         """
         Initializes the View class by setting up logging, user settings, and creating the graphical user interface (GUI).
+        
+        Args:
+            testing (bool): If True, sets the hostname to a test one for testing purposes.
+            fast (bool): If True, enables fast mode for quicker operations.
         """
         #create log
         dc = DeviceCommunicator()
-        self.hostname = dc.get_hostname()
-        self.hostname = "test" # for testing purposes
+        if not testing:
+            self.hostname = dc.get_hostname()
+        else:
+            self.hostname = "test_win" if dc.get_os() == "windows" else "test_lin"
         self.osType = dc.get_os()
         self.userPath = dc.get_path("~")
         self.rootPath = dc.get_path("/")

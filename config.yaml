@@ -76,5 +76,15 @@ hosts_map:
     - /home/user/.vscode/extensions
     clean_paths: []
     dest_paths:
-    - /media/user/smb_raspberrypi/home/gazo/Desktop/cloud/Backups
+    - /home/user/Desktop/backup_test
+- hostname: test_lin
+  info:
+    last_selected_dest: /home/user/Desktop/backup_test
+    mac: not used
+    name: not used
+  paths:
+    backup_paths:
+    - /home/user/Desktop/Arbeit
+    clean_paths: []
+    dest_paths:
     - /home/user/Desktop/backup_test

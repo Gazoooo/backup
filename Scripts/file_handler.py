@@ -67,7 +67,7 @@ class FileHandler():
         new_host = {
             "hostname": self.hostname,
             "info": {
-                "last_selected_dest": "None",
+                "last_selected_dest": self.userPath,
                 "mac": "not used", 
                 "name": "not used"
             },
