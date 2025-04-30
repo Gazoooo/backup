@@ -79,8 +79,8 @@ class View:
         self.lightgreen = "#41DC8E"
         
         self.style = ttk.Style()
-        self.style.configure("Custom.TLabel", font=("Arial", 16), background="brown", foreground="white")
-        self.style.configure("Custom.TCheckbutton", font=("Arial", 16), background="brown", foreground="white") 
+        self.style.configure("Custom.TLabel", font=("Arial", 16), background=self.color_palette[2], foreground="white")
+        self.style.configure("Custom.TCheckbutton", font=("Arial", 16), background=self.color_palette[1], foreground="white", width=25) 
         
     def create_guiElements(self):
         """
@@ -92,33 +92,38 @@ class View:
         
         self.mainframe_choosing_task = tk.Frame(self.backupfenster, bg=self.color_palette[1], height=750, width=350)
         self.mainframe_choosing_task.place(x=10,y=10)
-        self.subframe_choosing_task = tk.Frame(self.mainframe_choosing_task, bg=self.color_palette[2], height=600, width=320)
-        self.subframe_choosing_task.place(x=10,y=100)
         self.mainframe_choosing_folders = tk.Frame(self.backupfenster, bg=self.color_palette[1], height=750, width=400)
         self.mainframe_choosing_folders.place(x=400, y=10)
 
-        self.taskChoose = ttk.Label(self.mainframe_choosing_task, text=f"Choose tasks to complete.", style="Custom.TLabel")
+        self.taskChoose = ttk.Label(self.mainframe_choosing_task, text=f"Choose tasks to complete.", 
+                                    style="Custom.TLabel", background=self.color_palette[2])
         self.taskChoose.place(x=10,y=10)
 
-        self.check_clean = ttk.Checkbutton(self.subframe_choosing_task, text=f"Cleaning\n(experimental)", style="Custom.TCheckbutton")
+        self.check_clean = ttk.Checkbutton(self.mainframe_choosing_task, text=f"Cleaning\n(experimental)", style="Custom.TCheckbutton")
         self.check_clean.state(['!alternate', '!disabled'])
-        self.check_clean.place(x=10, y=10)
-        self.check_smartphoneBackup = ttk.Checkbutton(self.subframe_choosing_task, text="Smartphone Backup\n(in work)", style="Custom.TCheckbutton")
+        self.check_clean.place(x=10, y=100)
+        self.check_smartphoneBackup = ttk.Checkbutton(self.mainframe_choosing_task, text="Smartphone Backup\n(in work)", style="Custom.TCheckbutton")
         self.check_smartphoneBackup.state(['!alternate', 'disabled'])
-        self.check_smartphoneBackup.place(x=10, y=110)
-        self.check_virusScan = ttk.Checkbutton(self.subframe_choosing_task, text="Virenscan\n(experimental; only Windows)", style="Custom.TCheckbutton")
-        self.check_virusScan.state(['!alternate','!disabled'])
-        self.check_virusScan.place(x=10,y=210)
-        self.check_healthScan = ttk.Checkbutton(self.subframe_choosing_task, text="Health Scan\n(experimental; only Windows)", style="Custom.TCheckbutton")
-        self.check_healthScan.state(['!alternate', '!disabled'])
-        self.check_healthScan.place(x=10, y=310)
-        self.check_fileBackup = ttk.Checkbutton(self.subframe_choosing_task, text="File Backup",style="Custom.TCheckbutton")
+        self.check_smartphoneBackup.place(x=10, y=200)
+        self.check_virusScan = ttk.Checkbutton(self.mainframe_choosing_task, text="Virenscan\n(experimental; only Windows)", style="Custom.TCheckbutton")
+        self.check_virusScan.state(['!alternate','disabled'])
+        self.check_virusScan.place(x=10,y=300)
+        self.check_healthScan = ttk.Checkbutton(self.mainframe_choosing_task, text="Health Scan\n(experimental; only Windows)", style="Custom.TCheckbutton")
+        self.check_healthScan.state(['!alternate', 'disabled'])
+        self.check_healthScan.place(x=10, y=400)
+        self.check_fileBackup = ttk.Checkbutton(self.mainframe_choosing_task, text="File Backup",style="Custom.TCheckbutton")
         self.check_fileBackup.state(['!alternate', 'selected'])
-        self.check_fileBackup.place(x=10, y=410)
+        self.check_fileBackup.place(x=10, y=500)
         
-        self.backup_folders_list = tk.Listbox(self.mainframe_choosing_folders, width=60, height=10)
+        self.confirm = tk.Button(self.mainframe_choosing_task, text ="Execute tasks",bg="green", command=self.go)
+        self.confirm.place(x=10,y=650)
+        self.stop = tk.Button(self.mainframe_choosing_task, text="Stop tasks", bg="red", command=self.stop_tasks)
+        self.stop.place(x=150,y=650)
+        self.stop.config(state="disabled")
+        
+        self.backup_folders_list = tk.Listbox(self.mainframe_choosing_folders, width=47, height=10)
         self.backup_folders_list.place(x=10,y=50)
-        self.clean_folders_list = tk.Listbox(self.mainframe_choosing_folders, width=60, height=10)
+        self.clean_folders_list = tk.Listbox(self.mainframe_choosing_folders, width=47, height=10)
         self.clean_folders_list.place(x=10,y=440)
         self.destDir_folders_list = ttk.Combobox(self.backupfenster, height=10, state="readonly")
         self.destDir_folders_list.place(x=1100,y=750)
@@ -129,9 +134,11 @@ class View:
         self.remove_folders_backup_button = tk.Button(self.mainframe_choosing_folders, bg=self.lightred, text="Remove selected", 
                                                       command=lambda: self.edit_folder("remove", self.backup_folders_list, "paths.backup_paths"))
         self.remove_folders_backup_button.place(x=200,y=10)
-        self.add_folders_clean_button = tk.Button(self.mainframe_choosing_folders, text="Add Folders to clean", 
+        self.add_folders_clean_button = tk.Button(self.mainframe_choosing_folders, text="Add Folders to clean (Not implemented)", bg=self.lightgreen,
                                                   command=lambda: self.edit_folder("add", self.clean_folders_list, "paths.clean_paths"))
         self.add_folders_clean_button.place(x=10,y=400)
+        self.add_folders_clean_button.config(state='disabled')
+
         
         self.add_destDir_button = tk.Button(self.backupfenster, bg=self.lightgreen, text="Add destDir", 
                                             command=lambda: self.edit_destDir(mode="add"))
@@ -139,12 +146,6 @@ class View:
         self.remove_destDir_button = tk.Button(self.backupfenster, bg=self.lightred, text="Remove selected destDir", 
                                                command=lambda: self.edit_destDir(mode="remove"))
         self.remove_destDir_button.place(x=850,y=750)
-
-        self.confirm = tk.Button(self.subframe_choosing_task, text ="Execute tasks",bg="green", command=self.go)
-        self.confirm.place(x=10,y=550)
-        self.stop = tk.Button(self.subframe_choosing_task, text="Stop tasks", bg="red", command=self.stop_tasks)
-        self.stop.place(x=150,y=550)
-        self.stop.config(state="disabled")
 
         self.log = tk.Text(self.backupfenster, state="disabled", width=75, height=30)
         self.log.place(x=850,y=10)
@@ -274,7 +275,7 @@ BackupPath:\n{selected}
         for path in self.backupPaths_list:
             self.backup_folders_list.insert(tk.END, path)
             
-        clean_list = ["NOT IMPLEMENTED"] #TODO
+        clean_list = [] #TODO
         for path in clean_list:
             self.clean_folders_list.insert(tk.END, path)
             
