@@ -55,7 +55,7 @@ class ShellCommunicator:
             cmd = ["RD", "/S", "/Q", dir]
         else:
             cmd = ["del", "/F", dir]
-        result = subprocess.run(cmd, check=True, shell=True)
+        result = subprocess.run(cmd, check=True, shell=True, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
         return result
 
     def _delete_linux(self, dir):
@@ -124,7 +124,7 @@ class ShellCommunicator:
         if os.path.isdir(src):
             dst = os.path.join(dst, os.path.basename(src))
         cmd = ["robocopy", src, dst, "/B", "/E", "/Z", f"/MT:{self.threads_to_use}", "/MIR"]
-        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8', errors='replace', preexec_fn=os.setsid)
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8', errors='replace', creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
         return process
 
     def parse_progress(self, line, copied_files, total_files):
@@ -188,7 +188,10 @@ class ShellCommunicator:
             for proc in self.running_procs:
                 if proc:
                     if proc.poll() is None: #does process live?
-                        os.killpg(os.getpgid(proc.pid), signal.SIGINT)  # Send Ctrl+C signal to the subprocess
+                        if self.os_type == "linux":
+                            os.killpg(os.getpgid(proc.pid), signal.SIGINT)  # Unix-style Ctrl+C to process group
+                        elif self.os_type == "windows":
+                            proc.send_signal(signal.CTRL_BREAK_EVENT)  # Windows-style Ctrl+Break to process group
                         proc.wait()  # Wait for the subprocess to finish
                         self.logger.debug(f"Stopped process {proc.pid}")
         except Exception as e:
