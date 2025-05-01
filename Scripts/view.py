@@ -181,7 +181,7 @@ class View:
                 task_infos["file_backup"] = {
                     "dstPath": self.filehandler.create_backupPath(),
                     "to_delete": self.filehandler.check_deletable("backup"),
-                    "backupPaths": self.filehandler.construct_absolute_paths(self.backupPaths_list)
+                    "backupPaths": self.backupPaths_list
                     
                 }
         except Exception as e:
@@ -219,6 +219,7 @@ class View:
             case "remove":
                 curDir = self.destDir_var.get()
                 values = list(self.destDir_folders_list['values'])
+                print(curDir, values)
                 if curDir in values and len(values) > 1:
                     values.remove(curDir)
                     self.destDir_folders_list['values'] = values
@@ -234,13 +235,14 @@ class View:
                 self.destDir_var.set(selected)
                 details_string = f"""\
 Device-Name: {self.hostname}
-BackupPath:\n{selected}
+BackupPath:\n{self.filehandler.visualize_path(selected)}
             """
                 self.label_info.config(text=details_string)
                 self.filehandler.update_yaml("info.last_selected_dest", selected)
             
         self.destDir_folders_list.set("Choose your DestDir...")
         self.destDir_folders_list.selection_clear()
+        self.backupfenster.focus_set()
     
     def edit_folder(self, mode, refList, yaml_key):
         """
@@ -250,7 +252,7 @@ BackupPath:\n{selected}
             case "add":
                 folder = tk.filedialog.askdirectory(title="Select Folder", parent=self.backupfenster, initialdir=self.userPath)
                 self.filehandler.update_yaml(yaml_key, folder)
-                refList.insert(tk.END, folder)
+                refList.insert(tk.END, self.filehandler.visualize_path(folder))
                     
             case "remove":
                 selection = refList.curselection()
@@ -263,9 +265,14 @@ BackupPath:\n{selected}
     def data_init(self):
         """
         Initial method.
-        # 2. fill the combobox with destdir list
-        # 1. fill in specific paths for backup/clean
+        1. check if backup from today already exists
+        2. fill the combobox with destdir list
+        3. fill in specific paths for backup/clean
         """
+        if self.filehandler.backup_alreadyExists():
+            self.update_log(f"Backup from today already exists.", "warning")
+            self.update_log("=> For a backup the destination will be mirrored 1:1 with the source (including deletion of missing files).", "warning")
+            self.logger.warning(f"Backup from today already exists. Mirroring active!!!")
         self.last_destPath_selected = self.info_dict["last_selected_dest"]
         self.destDir_var = tk.StringVar(value=self.last_destPath_selected)
         self.destDir_folders_list['values'] = self.destPaths_list
@@ -273,11 +280,11 @@ BackupPath:\n{selected}
         self.edit_destDir()
         
         for path in self.backupPaths_list:
-            self.backup_folders_list.insert(tk.END, path)
+            self.backup_folders_list.insert(tk.END, self.filehandler.visualize_path(path))
             
         clean_list = [] #TODO
         for path in clean_list:
-            self.clean_folders_list.insert(tk.END, path)
+            self.clean_folders_list.insert(tk.END, self.filehandler.visualize_path(path))
             
     def update_log(self, text, tag=None, clear=False, update=False):
         """

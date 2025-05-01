@@ -1,49 +1,46 @@
 hosts_map:
 - hostname: gustavs-laptop-ubuntu
   info:
-    last_selected_dest: /home/user/Desktop/backup_test
+    last_selected_dest: /media/user/Extreme Pro/Backups/devices
     mac: not used
     name: not used
   paths:
     backup_paths:
-    - Desktop/Programmieren
-    - Desktop/Arbeit
-    - Desktop/Icons_Linux
-    - Desktop/Uni_tmp
-    - Desktop/Linux_Help.txt
+    - /home/user/Desktop/Programmieren
+    - /home/user/Desktop/Arbeit
+    - /home/user/Desktop/Icons_Linux
+    - /home/user/Desktop/Uni_tmp
+    - /home/user/Desktop/Linux_Help.txt
     - /home/user/.config/Code/User
     - /home/user/.vscode/extensions
     clean_paths:
     - /tmp
-    - .cache
+    - /home/user/.cache
     - /var/tmp
     - /var/log/
-    - ~/.local/share/Trash/
+    - /home/user/.local/share/Trash/
     dest_paths:
     - /media/user/Extreme Pro/Backups/devices
     - /media/user/smb_raspberrypi/home/gazo/Desktop/cloud/Backups/devices
-    - /home/user/Desktop/backup_test
 - hostname: gustavs-laptop-windows
   info:
-    last_selected_dest: D:\Backups\devices
+    last_selected_dest: D:/Backups/devices
     mac: not used
     name: not used
   paths:
     backup_paths:
-    - Desktop/Uni
-    - Desktop/Icons_Windows
-    - Desktop/LaTex
-    - Documents/Electronic Arts/Die Sims 4
+    - C:/Users/user/Desktop/Uni
+    - C:/Users/user/Desktop/Icons_Windows
+    - C:/Users/user/Desktop/LaTex
+    - C:/Users/user/Documents/Electronic Arts/Die Sims 4
     - C:/signs
     clean_paths:
     - C:/WINDOWS/Temp
-    - AppData/Local/Temp
-    - Downloads
-    - $Recycle.Bin
-    - Pictures/Screenshots
+    - C:/Users/user/AppData/Local/Temp
+    - C:/Users/user/Downloads
+    - C:/$Recycle.Bin
+    - C:/Users/user/Pictures/Screenshots
     dest_paths:
-    - /media/user/Extreme Pro/Backups/devices
-    - F:/Backups/devices
     - D:/Backups/devices
 - hostname: gustavs-pc-windows
   info:
@@ -52,31 +49,19 @@ hosts_map:
     name: not used
   paths:
     backup_paths:
-    - Desktop/Sonstiges
+    - C:/Users/user/Desktop/Sonstiges
     - C:/Users/user/Desktop/Freizeit
     - C:/Users/user/Desktop/Finanzen
     - C:/Users/user/AppData/Local/Google/Chrome/User Data/Default
     clean_paths:
     - C:/WINDOWS/Temp
-    - AppData/Local/Temp
-    - Downloads
-    - $Recycle.Bin
-    - Pictures/Screenshots
+    - C:/Users/user/AppData/Local/Temp
+    - C:/Users/user/Downloads
+    - C:/$Recycle.Bin
+    - C:/Users/user/Pictures/Screenshots
     dest_paths:
     - /media/user/Extreme Pro/Backups/devices
     - F:/Backups/devices
-- hostname: test
-  info:
-    last_selected_dest: /home/user/Desktop/backup_test
-    mac: not used
-    name: not used
-  paths:
-    backup_paths:
-    - /home/user/Desktop/Arbeit
-    - /home/user/.vscode/extensions
-    clean_paths: []
-    dest_paths:
-    - /home/user/Desktop/backup_test
 - hostname: test_lin
   info:
     last_selected_dest: /home/user/Desktop/backup_test

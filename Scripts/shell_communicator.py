@@ -30,7 +30,8 @@ class ShellCommunicator:
             5: "Some files could not be copied due to permission issues.",
             6: "Additional files or directories were detected and not copied.",
             7: "Files were copied successfully, but some files could not be accessed.",
-            8: "Some files were copied successfully, and some files could not be accessed."
+            8: "Some files were copied successfully, and some files could not be accessed.",
+            16: "No files copied. This is likely the case because src and dst are identical."
             
         }
         self.exitcodes_rsync = {

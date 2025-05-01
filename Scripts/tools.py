@@ -58,6 +58,7 @@ def change_text(feld, text, tag=None, clear=False, update=False):
         
         if clear:
             feld.delete('1.0', "end")
+            return
         
         if update:
             current_line_start = feld.index("insert linestart - 1 lines")

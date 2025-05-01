@@ -19,8 +19,9 @@ class FileHandler():
         """
         self.hostname = hostname
         self.userPath = userPath
-        self.config_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config.yaml")
-        self.log_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "Task-Log.log")
+        basePath = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        self.config_path = Path(basePath).joinpath("config.yaml")
+        self.log_path =Path(basePath).joinpath("Task-Log.log")
 
         self.BACKUP_LIMIT = 3
         self.config_data = ""
@@ -55,10 +56,10 @@ class FileHandler():
         Returns:
             list: [info_dict, backupPaths_list, destPaths_list]
         """
-        self.destPaths_list = self.norm(self.userDict['paths']['dest_paths'])
-        self.destPath = self.norm(self.userDict['info']['last_selected_dest'])
+        self.destPaths_list = self.userDict['paths']['dest_paths']
+        self.destPath = self.userDict['info']['last_selected_dest']
         self.info_dict = self.userDict['info']
-        self.backupPaths_list = self.norm(self.userDict['paths']['backup_paths'])
+        self.backupPaths_list = self.userDict['paths']['backup_paths']
         
         return [self.info_dict, self.backupPaths_list, self.destPaths_list]
 
@@ -95,6 +96,8 @@ class FileHandler():
             Exception: If update or deletion fails.
         """
         try:
+            if isinstance(value, str):
+                value = self.norm(value) #only write UNIX like paths to yaml
             keys = key_path.split(".")
             ref = self.userDict
             for key in keys[:-1]:
@@ -178,6 +181,19 @@ class FileHandler():
         )
         self.logger = logging.getLogger(__name__)
 
+    def backup_alreadyExists(self):
+        """
+        Reports if backup from today already exists.
+        
+        Returns:
+        bool: True if yes, else false
+        """
+        self.backup_path = Path(self.destPath).joinpath(self.hostname, f"backup_{self.get_date()}")
+        if os.path.isdir(self.backup_path):
+            return True
+        else:
+            return False
+
     def create_backupPath(self):
         """Creates a backup directory path based on current date.
 
@@ -187,38 +203,13 @@ class FileHandler():
         Raises:
             Exception: If directory creation fails.
         """
-        self.backup_path = os.path.join(self.destPath, self.hostname, f"backup_{self.get_date()}")
+        self.backup_path = Path(self.destPath).joinpath(self.hostname, f"backup_{self.get_date()}")
         try:
             os.makedirs(self.backup_path, exist_ok=True)
         except Exception as e:
             self.logger.error(f"create_backup: {e}")
             raise e
         return self.backup_path
-
-    def construct_absolute_paths(self, pathList, task=None):
-        """Normalizes and constructs absolute paths from given paths.
-
-        Args:
-            pathList (list): List of relative or absolute paths.
-            task (str, optional): Not used currently.
-
-        Returns:
-            list: List of absolute paths.
-
-        Raises:
-            Exception: If construction fails.
-        """
-        user_path = os.path.expanduser("~")
-        try:
-            absolute_paths = [
-                path if os.path.isabs(path) else os.path.join(user_path, path)
-                for path in pathList
-            ]
-            self.norm(absolute_paths)
-            return absolute_paths
-        except Exception as e:
-            self.logger.error(f"construct_absolute_paths: {e}")
-            raise e
 
     def check_deletable(self, prefix):
         """Checks for outdated backup folders to delete.
@@ -229,7 +220,7 @@ class FileHandler():
         Returns:
             list: List of paths to be deleted.
         """
-        path = os.path.join(self.destPath, self.hostname)
+        path = Path(self.destPath).joinpath(self.hostname)
         self.logger.info(f"Now checking for old stuff to delete in '{path}' ...")
         self.logger.debug(f"delete-prefix: {prefix}; num backups: {self.get_num_files(path)}")
         to_delete_dirs = []
@@ -249,8 +240,7 @@ class FileHandler():
             if name.startswith(prefix) and os.path.isdir(full_path):
                 to_delete_dirs.append((date, full_path))
                 if date.strftime("%Y-%m-%d") == today and any(Path(full_path).iterdir()): # ignore if newly created
-                    self.update_text(f"Backup from today already exists. Maybe it will be overridden...", "warning")
-                    self.logger.warning(f"Backup from today already exists. Maybe it will be overridden...")
+                    pass
             elif os.path.isfile(full_path):
                 self.logger.warning(f"Standalone file found in '{path}'. There shouldn't be any.")
 
@@ -261,7 +251,27 @@ class FileHandler():
         return to_delete_dirs
 
     def norm(self, paths):
-        """Normalizes file paths according to OS.
+        """Normalizes file paths to UNIX Style. ("/")
+
+        Args:
+            paths (Union[str, list]): A single path or a list of paths.
+
+        Returns:
+            Union[str, list]: Normalized path(s).
+
+        Raises:
+            TypeError: If input is not str or list of str.
+        """
+        if isinstance(paths, str):
+            return paths.replace("\\", "/")
+        elif isinstance(paths, list):
+            return [p.replace("\\", "/") for p in paths]
+        else:
+            raise TypeError("norm: Input must be a string or a list of strings")
+
+    def visualize_path(self, paths):
+        """
+        Normalize paths depending on operating system (uses '/' on Linux/macOS, '\' on Windows)
 
         Args:
             paths (Union[str, list]): A single path or a list of paths.
@@ -278,8 +288,7 @@ class FileHandler():
             return [os.path.normpath(p) for p in paths]
         else:
             raise TypeError("norm: Input must be a string or a list of strings")
-
-
+        
     # ------------------------------ Other -----------------------------
     def set_callback(self, callback):
         """Sets the callback function for updating text."""
