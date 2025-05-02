@@ -66,6 +66,7 @@ class View:
         
         #set user settings from yaml
         self.info_dict, self.backupPaths_list, self.destPaths_list = self.filehandler.get_userContent()
+        self.cleanPaths_list = [] #TODO
         self.data_init()
         self.taskRunning = False
         
@@ -79,8 +80,11 @@ class View:
         self.lightgreen = "#41DC8E"
         
         self.style = ttk.Style()
-        self.style.configure("Custom.TLabel", font=("Arial", 16), background=self.color_palette[2], foreground="white")
-        self.style.configure("Custom.TCheckbutton", font=("Arial", 16), background=self.color_palette[1], foreground="white", width=25) 
+        default_font = ("TkDefaultFont", 14)
+        label_font = ("TkHeadingFont", 14)
+        text_font = ("TkTextFont", 12)
+        self.style.configure("Custom.TLabel", font=label_font, background=self.color_palette[2], foreground="white")
+        self.style.configure("Custom.TCheckbutton", font=default_font, background=self.color_palette[1], foreground="white", width=25) 
         
     def create_guiElements(self):
         """
@@ -153,7 +157,7 @@ class View:
         self.log.tag_configure("warning", foreground="orange")
         self.log.tag_configure("success", foreground="green")
         
-        self.label_info = ttk.Label(self.backupfenster, text="", font=("Arial", 14), width=60, wraplength=600, style="Custom.TLabel")
+        self.label_info = ttk.Label(self.backupfenster, text="", style="Custom.TLabel")
         self.label_info.place(x=850,y=550)
             
     def go(self):
@@ -171,7 +175,7 @@ class View:
             backupDst = self.filehandler.create_backupPath() #not optimal here, but method has to be called before filehandler.check_old_backups()
             task_infos = {}
             if self.check_clean.instate(['selected']):
-                task_infos["clean"] = {"cleanPaths": [],
+                task_infos["clean"] = {"cleanPaths": self.cleanPaths_list,
                                        "oldBackups": self.filehandler.check_old_backups("backups")
                                        }   
             if self.check_smartphoneBackup.instate(['selected']):
@@ -212,8 +216,8 @@ class View:
                     self.filehandler.update_yaml("paths.dest_paths", folder)
                     #append to combobox
                     current_values = list(self.destDir_folders_list['values'])
-                    if folder not in current_values:
-                        current_values.append(folder)
+                    if self.filehandler.visualize_path(folder) not in current_values:
+                        current_values.append(self.filehandler.visualize_path(folder))
                     self.destDir_folders_list['values'] = current_values
                     self.destDir_folders_list.set(folder)
                     
@@ -253,13 +257,13 @@ class View:
         match mode:
             case "add":
                 folder = tk.filedialog.askdirectory(title="Select Folder", parent=self.backupfenster, initialdir=self.userPath)
-                existing_folders = refList.get(0, tk.END) 
-                print(existing_folders)
-                if self.filehandler.visualize_path(folder, short=True) not in existing_folders:
-                    self.filehandler.update_yaml(yaml_key, folder)
-                    refList.insert(tk.END, self.filehandler.visualize_path(folder, short=True))
-                    if "backup" in yaml_key:
-                        self.BackupSize_var.set(self.BackupSize_var.get() + self.filehandler.get_size(folder))
+                if folder:
+                    existing_folders = refList.get(0, tk.END) 
+                    if self.filehandler.visualize_path(folder, short=True) not in existing_folders:
+                        self.filehandler.update_yaml(yaml_key, folder)
+                        refList.insert(tk.END, self.filehandler.visualize_path(folder, short=True))
+                        if "backup" in yaml_key:
+                            self.BackupSize_var.set(self.BackupSize_var.get() + self.filehandler.get_size(folder))
                     
             case "remove":
                 selection = refList.curselection()
@@ -302,22 +306,24 @@ class View:
         self.destDir_var = tk.StringVar(value=self.last_destPath_selected)
         self.BackupSize_var = tk.DoubleVar(value=0)
         
-        self.destDir_folders_list['values'] = self.destPaths_list
-        self.destDir_folders_list.set(self.last_destPath_selected)  
-        self.edit_destDir()
         
         for path in self.backupPaths_list:
             self.backup_folders_list.insert(tk.END, self.filehandler.visualize_path(path, short=True))
             self.BackupSize_var.set(self.BackupSize_var.get() + self.filehandler.get_size(path))
-        clean_list = [] #TODO
-        for path in clean_list:
-            self.clean_folders_list.insert(tk.END, self.filehandler.visualize_path(path, short=True))
-            
+        for path in self.cleanPaths_list:
+            self.clean_folders_list.insert(tk.END, self.filehandler.visualize_path(path, short=True))#
+        curValues = []
+        for path in self.destPaths_list:
+            curValues.append(self.filehandler.visualize_path(path))
+        self.destDir_folders_list['values'] = curValues
+
+        self.destDir_folders_list.set(self.last_destPath_selected)  
+        self.edit_destDir()
         self.update_infoString(self.last_destPath_selected)
             
     def update_log(self, text, tag=None, clear=False, update=False):
         """
-        #callback function for executor to be able to update gui log
+        callback function for executor to be able to update gui log
         Updates the confirmation button state to either 'normal' or 'disabled' based on the execution process.
         """
         change_text(self.log, text, tag=tag, clear=clear, update=update)

@@ -73,3 +73,13 @@ hosts_map:
     clean_paths: []
     dest_paths:
     - /home/user/Desktop/backup_test
+- hostname: test_win
+  info:
+    last_selected_dest: C:/Users/user/Desktop
+    mac: not used
+    name: not used
+  paths:
+    backup_paths: []
+    clean_paths: []
+    dest_paths:
+    - C:/Users/user/Desktop

@@ -1,4 +1,4 @@
-# Auto-Backup your files!
+# A multi-User Auto-Backuper for your files!
 
 This is a python program I made where you can choose, which files t obackup where.
 
@@ -6,10 +6,14 @@ Note that this is work in progress!
 Note that in the moment only the backup task is implemented.
 at the moment only works with folders, not single files!
 
+Supports multi user -> one ssd for all devices
+config.yaml and log is created at first start
+when no host, a nerw one is created automatically
+
 ## Rough structure
 
 1. view is called
-2. the `config.yaml`is parsed for
+2. the `config.yaml` is parsed for
    1. checking if user is known, if not create new
    2. get suer data (files, backup paths, ...) from existing user
 3. user can config sth in the gui
