@@ -29,12 +29,17 @@ class FileHandler():
     # ------------- YAML specific -----------------------------
 
     def parse_yaml(self):
-        """Parses the configuration YAML file and stores it in self.config_data."""
+        """Parses the configuration YAML file and stores it in self.config_data.
+        Creates it as a dict if not exists. """
         try:
+            if not os.path.isfile(self.config_path):
+                with open(self.config_path, "a") as file:
+                    yaml.dump({"hosts_map": []}, file)
             with open(self.config_path, "r") as file:
                 self.config_data = yaml.safe_load(file)
-        except Exception:
-            print("Couldn't parse yaml.")
+        except Exception as e:
+            print(e)
+            self.logger.error("Couldn't parse yaml.")
     
     def search_user(self):
         """Searches for the user in the loaded config data.
@@ -43,6 +48,9 @@ class FileHandler():
             bool: True if user is found, False otherwise.
         """
         self.userDict = None
+        if not isinstance(self.config_data, dict):
+            self.logger.error("Error at the 'config.yaml' file! Delete the file to fix this.")
+            exit()
         for idx, host_dict in enumerate(self.config_data['hosts_map']):
             if host_dict['hostname'] == self.hostname:
                 self.userDict = host_dict
@@ -65,22 +73,26 @@ class FileHandler():
 
     def add_Host(self):
         """Adds a new host to the config data and writes it to the YAML file."""
+        self.logger.debug(f"Adding new host entry for '{self.hostname}.")
         new_host = {
             "hostname": self.hostname,
             "info": {
-                "last_selected_dest": self.userPath,
+                "last_selected_dest": self.norm(self.userPath),
                 "mac": "not used", 
                 "name": "not used"
             },
             "paths": {
                 "backup_paths": [],
                 "clean_paths": [],
-                "dest_paths": [self.userPath]
+                "dest_paths": [self.norm(self.userPath)]
             }
         }
 
         self.userDict = new_host
-        self.userIndex = self.config_data['hosts_map'][-1]
+        if len(self.config_data['hosts_map']) > 0:
+            self.userIndex = self.config_data['hosts_map'][-1]
+        else:
+            self.userIndex = 0
         self.config_data['hosts_map'].append(new_host)
         self.write_yaml()
 
@@ -124,6 +136,16 @@ class FileHandler():
             raise e
         _ = self.get_userContent()
     
+    def get_yamlItem(self, key_path, index):
+        """
+        helper method to reconstruct absolute path from display pat with '...'"""
+        keys = key_path.split(".")
+        ref = self.userDict
+        for key in keys[:-1]:
+            ref = ref[key]
+            last_key = keys[-1]
+        return ref[last_key][index]
+
     def write_yaml(self):
         """Writes the config data to the YAML file."""
         try:
@@ -176,7 +198,7 @@ class FileHandler():
             format='[%(levelname)s - %(name)s] %(asctime)s - %(message)s',
             handlers=[
                 logging.FileHandler(self.log_path),
-                logging.StreamHandler()
+                #logging.StreamHandler()
             ]
         )
         self.logger = logging.getLogger(__name__)
@@ -227,7 +249,7 @@ class FileHandler():
         today = self.get_date()
 
         for name in os.listdir(path):
-            print(name)
+            #print(f"found in dir: {name}")
             if name.endswith(".log"): #ignore logs
                 continue
             full_path = os.path.join(path, name)
@@ -257,7 +279,7 @@ class FileHandler():
             paths (Union[str, list]): A single path or a list of paths.
 
         Returns:
-            Union[str, list]: Normalized path(s).
+            str: Normalized path.
 
         Raises:
             TypeError: If input is not str or list of str.
@@ -285,12 +307,15 @@ class FileHandler():
         """
         path = os.path.normpath(path)
 
-        if short and len(path) > 4:
+        front = 3
+        back = 2
+        if short:
             parts = path.split(os.sep)
-            path = os.sep.join(parts[:3]) + os.sep + "..." + os.sep + os.sep.join(parts[-2:])
+            #print(path, parts)
+            if len(parts) > front+back and len(path) > front+back:
+                path = os.sep.join(parts[:front]) + os.sep + "..." + os.sep + os.sep.join(parts[-back:])
             
         return path
-
 
     def get_size(self, path):
         """Returns the size of a file or directory recursively.

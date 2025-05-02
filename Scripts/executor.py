@@ -74,10 +74,9 @@ class Executor:
         try:
             #delete old backup data
             self.update_text(f"Deleting {len(old_backup_paths)} old backups...")
-            for dir in old_backup_paths:
-                subs = get_subdirs(dir)
-                for sub in subs:
-                    result = self.dvc.delete(sub)
+            if len(old_backup_paths) != 0:
+                for dir in old_backup_paths:
+                    result = self.subprocesshandler.delete(dir)
             
             """ 
             #clean pc

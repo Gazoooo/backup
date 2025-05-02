@@ -31,7 +31,9 @@ class ShellCommunicator:
             6: "Additional files or directories were detected and not copied.",
             7: "Files were copied successfully, but some files could not be accessed.",
             8: "Some files were copied successfully, and some files could not be accessed.",
-            16: "No files copied. This is likely the case because src and dst are identical."
+            9: "Some files were copied successfully, but some were skipped.",
+            16: "No files copied. This is likely the case because src and dst are identical.",
+            3221225786: "Received CTRL+C – robocopy was terminated manually or by system signal."
             
         }
         self.exitcodes_rsync = {
@@ -168,7 +170,7 @@ class ShellCommunicator:
         """
         if os.path.isdir(src):
             dst = os.path.join(dst, os.path.basename(src))
-        cmd = ["robocopy", src, dst, "/B", "/E", "/Z", f"/MT:{self.threads_to_use}", "/MIR"]
+        cmd = ["robocopy", src, dst, "/R:3", "/W:5", "/B", "/E", "/Z", f"/MT:{self.threads_to_use}", "/MIR"]
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8', errors='replace', creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
         return process
 
