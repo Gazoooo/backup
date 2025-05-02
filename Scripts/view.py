@@ -175,8 +175,8 @@ class View:
             backupDst = self.filehandler.create_backupPath() #not optimal here, but method has to be called before filehandler.check_old_backups()
             task_infos = {}
             if self.check_clean.instate(['selected']):
-                task_infos["clean"] = {"cleanPaths": self.cleanPaths_list,
-                                       "oldBackups": self.filehandler.check_old_backups("backup")
+                task_infos["clean"] = {"cleanPaths": [],
+                                       "oldBackups": self.filehandler.check_old_backups("backups")
                                        }   
             if self.check_smartphoneBackup.instate(['selected']):
                 task_infos["smartphone_backup"] = {"None": "None"}
@@ -313,15 +313,10 @@ class View:
         for path in self.backupPaths_list:
             self.backup_folders_list.insert(tk.END, self.filehandler.visualize_path(path, short=True))
             self.BackupSize_var.set(self.BackupSize_var.get() + self.filehandler.get_size(path))
-        for path in self.cleanPaths_list:
+        clean_list = [] #TODO
+        for path in clean_list:
             self.clean_folders_list.insert(tk.END, self.filehandler.visualize_path(path, short=True))
-        curValues = []
-        for path in self.destPaths_list:
-            curValues.append(self.filehandler.visualize_path(path))
-        self.destDir_folders_list['values'] = curValues
-
-        self.destDir_folders_list.set(self.last_destPath_selected)  
-        self.edit_destDir()
+            
         self.update_infoString(self.last_destPath_selected)
             
     def update_log(self, text, tag=None, clear=False, update=False):
