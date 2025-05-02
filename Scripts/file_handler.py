@@ -134,7 +134,7 @@ class FileHandler():
             self.logger.error(f"write_yaml: {e}")
             raise e
 
-    # --------------- Path and Logging -------------------------
+    # --------------- File related (Paths, Logging, ...) -------------------------
 
     def get_date(self, format="%Y-%m-%d"):
         """Returns current date as string.
@@ -211,7 +211,7 @@ class FileHandler():
             raise e
         return self.backup_path
 
-    def check_deletable(self, prefix):
+    def check_old_backups(self, prefix):
         """Checks for outdated backup folders to delete.
 
         Args:
@@ -269,12 +269,13 @@ class FileHandler():
         else:
             raise TypeError("norm: Input must be a string or a list of strings")
 
-    def visualize_path(self, paths):
+    def visualize_path(self, path, short=False):
         """
         Normalize paths depending on operating system (uses '/' on Linux/macOS, '\' on Windows)
 
         Args:
-            paths (Union[str, list]): A single path or a list of paths.
+            paths (str): A single path.
+            short (bool): If True, shorten the path by only showing the first 2 and last 2 parts.
 
         Returns:
             Union[str, list]: Normalized path(s).
@@ -282,13 +283,41 @@ class FileHandler():
         Raises:
             TypeError: If input is not str or list of str.
         """
-        if isinstance(paths, str):
-            return os.path.normpath(paths)
-        elif isinstance(paths, list):
-            return [os.path.normpath(p) for p in paths]
+        path = os.path.normpath(path)
+
+        if short and len(path) > 4:
+            parts = path.split(os.sep)
+            path = os.sep.join(parts[:3]) + os.sep + "..." + os.sep + os.sep.join(parts[-2:])
+            
+        return path
+
+
+    def get_size(self, path):
+        """Returns the size of a file or directory recursively.
+
+        Args:
+            path (str): Path to the file or directory.
+
+        Returns:
+            int: Size in GB.
+        """
+        if os.path.isfile(path):
+            total_size = os.path.getsize(path)
+        elif os.path.isdir(path):
+            total_size = 0
+            for dirpath, dirnames, filenames in os.walk(path):
+                for f in filenames:
+                    fp = os.path.join(dirpath, f)
+                    try:
+                        total_size += os.path.getsize(fp)
+                    except FileNotFoundError:
+                        self.logger.info(f"get_size(): File not found (skipped): {fp}")
+                    except PermissionError:
+                        self.logger.info(f"get_size(): Permission denied (skipped): {fp}")
         else:
-            raise TypeError("norm: Input must be a string or a list of strings")
-        
+            raise ValueError(f"Path '{path}' is neither a file nor a directory.")
+        return total_size / (1024 * 1024 * 1024)  # Convert to GB
+
     # ------------------------------ Other -----------------------------
     def set_callback(self, callback):
         """Sets the callback function for updating text."""

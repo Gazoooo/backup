@@ -68,16 +68,27 @@ class Executor:
 
     def clean(self):
         """Deletes the contents of directories specified in `task_infos["clean"]`."""
-        self.logger.info("------------Clean Task------------------")
         self.update_text("Starting cleaning...")
+        clean_paths = self.task_infos["clean"]["cleanPaths"]
+        old_backup_paths = self.task_infos["clean"]["oldBackups"]
         try:
-            clean_paths = self.task_infos["clean"]
+            #delete old backup data
+            self.update_text(f"Deleting {len(old_backup_paths)} old backups...")
+            for dir in old_backup_paths:
+                subs = get_subdirs(dir)
+                for sub in subs:
+                    result = self.dvc.delete(sub)
+            
+            """ 
+            #clean pc
             for dir in clean_paths:
                 subs = get_subdirs(dir)
                 for sub in subs:
                     result = self.dvc.delete(sub)
+            """  
+            
             self.logger.info("Cleaning ended successfull")
-            self.update_text("Cleaning ended successfull")
+            self.update_text("Cleaning ended successfull", "success")
         except Exception as e:
             self.global_error = True
             self.logger.error(f"Cleaning: {e}")
@@ -146,13 +157,7 @@ class Executor:
         self.update_text("Starting file backup...")
         dest_dir = self.task_infos["file_backup"]["dstPath"]
         backup_paths = self.task_infos["file_backup"]["backupPaths"]
-        deletable_dirs = self.task_infos["file_backup"]["to_delete"]
-        try:
-            # delete old stuff
-            if len(deletable_dirs) != 0:
-                for dir in deletable_dirs:
-                    result = self.subprocesshandler.delete(dir)
-                
+        try:  
             # make new backup
             total_dirs_toBackup = len(backup_paths)
             self.update_text("---")

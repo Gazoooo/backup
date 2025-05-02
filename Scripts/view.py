@@ -99,16 +99,16 @@ class View:
                                     style="Custom.TLabel", background=self.color_palette[2])
         self.taskChoose.place(x=10,y=10)
 
-        self.check_clean = ttk.Checkbutton(self.mainframe_choosing_task, text=f"Cleaning\n(experimental)", style="Custom.TCheckbutton")
-        self.check_clean.state(['!alternate', '!disabled'])
+        self.check_clean = ttk.Checkbutton(self.mainframe_choosing_task, text=f"Clean (Remove old backups)", style="Custom.TCheckbutton")
+        self.check_clean.state(['!alternate', 'selected'])
         self.check_clean.place(x=10, y=100)
-        self.check_smartphoneBackup = ttk.Checkbutton(self.mainframe_choosing_task, text="Smartphone Backup\n(in work)", style="Custom.TCheckbutton")
+        self.check_smartphoneBackup = ttk.Checkbutton(self.mainframe_choosing_task, text="Smartphone Backup", style="Custom.TCheckbutton")
         self.check_smartphoneBackup.state(['!alternate', 'disabled'])
         self.check_smartphoneBackup.place(x=10, y=200)
-        self.check_virusScan = ttk.Checkbutton(self.mainframe_choosing_task, text="Virenscan\n(experimental; only Windows)", style="Custom.TCheckbutton")
+        self.check_virusScan = ttk.Checkbutton(self.mainframe_choosing_task, text="Virenscan", style="Custom.TCheckbutton")
         self.check_virusScan.state(['!alternate','disabled'])
         self.check_virusScan.place(x=10,y=300)
-        self.check_healthScan = ttk.Checkbutton(self.mainframe_choosing_task, text="Health Scan\n(experimental; only Windows)", style="Custom.TCheckbutton")
+        self.check_healthScan = ttk.Checkbutton(self.mainframe_choosing_task, text="Health Scan", style="Custom.TCheckbutton")
         self.check_healthScan.state(['!alternate', 'disabled'])
         self.check_healthScan.place(x=10, y=400)
         self.check_fileBackup = ttk.Checkbutton(self.mainframe_choosing_task, text="File Backup",style="Custom.TCheckbutton")
@@ -168,9 +168,12 @@ class View:
         try:
             self.filehandler.write_yaml()
             self.info_dict, self.backupPaths_list, self.destPaths_list = self.filehandler.get_userContent()
+            backupDst = self.filehandler.create_backupPath() #not optimal here, but method has to be called before filehandler.check_old_backups()
             task_infos = {}
             if self.check_clean.instate(['selected']):
-                task_infos["clean"] = {"cleanPaths": self.folders_to_clean}
+                task_infos["clean"] = {"cleanPaths": [],
+                                       "oldBackups": self.filehandler.check_old_backups("backups")
+                                       }   
             if self.check_smartphoneBackup.instate(['selected']):
                 task_infos["smartphone_backup"] = {"None": "None"}
             if self.check_virusScan.instate(['selected']):
@@ -179,10 +182,8 @@ class View:
                 task_infos["health_scan"] = {"None": "None"}
             if self.check_fileBackup.instate(['selected']):
                 task_infos["file_backup"] = {
-                    "dstPath": self.filehandler.create_backupPath(),
-                    "to_delete": self.filehandler.check_deletable("backup"),
+                    "dstPath": backupDst,
                     "backupPaths": self.backupPaths_list
-                    
                 }
         except Exception as e:
             self.logger.error(f"go: {e}")
@@ -219,7 +220,6 @@ class View:
             case "remove":
                 curDir = self.destDir_var.get()
                 values = list(self.destDir_folders_list['values'])
-                print(curDir, values)
                 if curDir in values and len(values) > 1:
                     values.remove(curDir)
                     self.destDir_folders_list['values'] = values
@@ -233,26 +233,33 @@ class View:
                 self.confirm.config(state="disabled")
             else:
                 self.destDir_var.set(selected)
-                details_string = f"""\
-Device-Name: {self.hostname}
-BackupPath:\n{self.filehandler.visualize_path(selected)}
-            """
-                self.label_info.config(text=details_string)
+                self.update_infoString(selected)
                 self.filehandler.update_yaml("info.last_selected_dest", selected)
+                self.filehandler.backup_alreadyExists()
             
         self.destDir_folders_list.set("Choose your DestDir...")
         self.destDir_folders_list.selection_clear()
         self.backupfenster.focus_set()
-    
+      
     def edit_folder(self, mode, refList, yaml_key):
         """
         Allows the user to add or remove folders from the backup or clean lists, updating the respective GUI list and YAML file.
+        
+        Args:
+            mode (str): The mode of operation, either "add" or "remove".
+            refList (tk.Listbox): The listbox reference to update.
+            yaml_key (str): The key in the YAML file to update.
         """
         match mode:
             case "add":
                 folder = tk.filedialog.askdirectory(title="Select Folder", parent=self.backupfenster, initialdir=self.userPath)
-                self.filehandler.update_yaml(yaml_key, folder)
-                refList.insert(tk.END, self.filehandler.visualize_path(folder))
+                existing_folders = refList.get(0, tk.END) 
+                print(existing_folders)
+                if self.filehandler.visualize_path(folder, short=True) not in existing_folders:
+                    self.filehandler.update_yaml(yaml_key, folder)
+                    refList.insert(tk.END, self.filehandler.visualize_path(folder, short=True))
+                    if "backup" in yaml_key:
+                        self.BackupSize_var.set(self.BackupSize_var.get() + self.filehandler.get_size(folder))
                     
             case "remove":
                 selection = refList.curselection()
@@ -261,30 +268,52 @@ BackupPath:\n{self.filehandler.visualize_path(selected)}
                     path = refList.get(index)
                     refList.delete(index)
                     self.filehandler.update_yaml(yaml_key, path, delete=True)
+                    if "backup" in yaml_key:
+                        self.BackupSize_var.set(self.BackupSize_var.get() - self.filehandler.get_size(path))
+                        
+        self.update_infoString(self.destDir_var.get())
 
+    def update_infoString(self, selectedDestPath):
+        """
+        Updates the information string displayed in the GUI based on the selected destination directory.
+        
+        Args:
+            selectedDestPath (str): The path of the selected destination directory.
+        """
+        details_string = f"Device-Name: {self.hostname}\n"
+        details_string += f"Selected destination: {self.filehandler.visualize_path(selectedDestPath)}\n"
+        details_string += f"Backup size: {self.BackupSize_var.get():.2f} GB\n"
+        self.label_info.config(text=details_string)
+        
     def data_init(self):
         """
         Initial method.
         1. check if backup from today already exists
-        2. fill the combobox with destdir list
-        3. fill in specific paths for backup/clean
+        2. initialize TK vars
+        3. fill the combobox with destdir list
+        4. fill in specific paths for backup/clean
         """
         if self.filehandler.backup_alreadyExists():
             self.update_log(f"Backup from today already exists.", "warning")
             self.update_log("=> For a backup the destination will be mirrored 1:1 with the source (including deletion of missing files).", "warning")
             self.logger.warning(f"Backup from today already exists. Mirroring active!!!")
+            
         self.last_destPath_selected = self.info_dict["last_selected_dest"]
         self.destDir_var = tk.StringVar(value=self.last_destPath_selected)
+        self.BackupSize_var = tk.DoubleVar(value=0)
+        
         self.destDir_folders_list['values'] = self.destPaths_list
         self.destDir_folders_list.set(self.last_destPath_selected)  
         self.edit_destDir()
         
         for path in self.backupPaths_list:
-            self.backup_folders_list.insert(tk.END, self.filehandler.visualize_path(path))
-            
+            self.backup_folders_list.insert(tk.END, self.filehandler.visualize_path(path, short=True))
+            self.BackupSize_var.set(self.BackupSize_var.get() + self.filehandler.get_size(path))
         clean_list = [] #TODO
         for path in clean_list:
-            self.clean_folders_list.insert(tk.END, self.filehandler.visualize_path(path))
+            self.clean_folders_list.insert(tk.END, self.filehandler.visualize_path(path, short=True))
+            
+        self.update_infoString(self.last_destPath_selected)
             
     def update_log(self, text, tag=None, clear=False, update=False):
         """
