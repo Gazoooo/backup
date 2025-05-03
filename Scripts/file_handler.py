@@ -138,7 +138,7 @@ class FileHandler():
     
     def get_yamlItem(self, key_path, index):
         """
-        helper method to reconstruct absolute path from display pat with '...'"""
+        helper method to reconstruct absolute path from display path with '...'"""
         keys = key_path.split(".")
         ref = self.userDict
         for key in keys[:-1]:

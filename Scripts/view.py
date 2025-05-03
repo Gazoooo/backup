@@ -176,7 +176,7 @@ class View:
             task_infos = {}
             if self.check_clean.instate(['selected']):
                 task_infos["clean"] = {"cleanPaths": [],
-                                       "oldBackups": self.filehandler.check_old_backups("backups")
+                                       "oldBackups": self.filehandler.check_old_backups("backup")
                                        }   
             if self.check_smartphoneBackup.instate(['selected']):
                 task_infos["smartphone_backup"] = {"None": "None"}
