@@ -2,6 +2,7 @@
 # Project Specific Settings
 # ==========================
 *.yaml
+*.png
 
 # ==========================
 # VS Code Settings

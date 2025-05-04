@@ -198,7 +198,7 @@ class FileHandler():
             format='[%(levelname)s - %(name)s] %(asctime)s - %(message)s',
             handlers=[
                 logging.FileHandler(self.log_path),
-                #logging.StreamHandler()
+                logging.StreamHandler()
             ]
         )
         self.logger = logging.getLogger(__name__)
