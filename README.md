@@ -26,13 +26,13 @@ A lightweight tkinter GUI written in python to automate your backups.
   </ul>
 </details>
 
-## 🌟 Highlights
+## 🌟 Highlights <a id="highlights"></a>
 - Choose where to backup which folders
 - auto-saves your configuration once set
 - supports configs for multiple users
   - e.g. useful if you have 1 SSD to back up multiple devices
 
-## ▶️ Usage
+## ▶️ Usage <a id="usage"></a>
 Screenshot from the program executnig a backup: 
 ![Screenshot](demo.png)
 
@@ -42,11 +42,11 @@ Screenshot from the program executnig a backup:
 4. If task is started, you will see messages and/or progressbars on the rigth indicating the task is running
 5. If something fails (, which will hopefully never happen ;)) you will be warned and can take a look in trhe `.log` file (same directionary as the `main.py` script)
 
-## 🛠️ Setup
+## 🛠️ Setup <a id="setup"></a>
 This little guide will guide you to setup this programm on your local machine.
 > tested on Windows/Linux
 
-### Prerequisites
+### Prerequisites <a id="prerequisites"></a>
 Before installing or using this project, make sure the following are available on your system:
 
 - rsync>=3.1.0 (for Linux)
@@ -56,7 +56,7 @@ Before installing or using this project, make sure the following are available o
 
 > It is recommended to have Python in your `PATH`, otherwise you always have to write the full path to your local `python.exe`. Linux/MacOS have python pre-installed and in `PATH` by default, and on windows you have to [install python](http://python.org/downloads/) and [put it in your path](https://phoenixnap.com/kb/add-python-to-path) (if not done automatically at installation)
 
-### Installation
+### Installation <a id="installation"></a>
 If you have fullfilled all the requirements listed above, you can
 ```bash
 git clone https://github.com/Gazoooo/backup.git # clone repo
@@ -65,7 +65,7 @@ pip install -r requirements.txt # install the necessary packages
 python Scripts/main.py # run the script
 ```
 
-## 💭 Feedback
+## 💭 Feedback <a id="feedback"></a>
 I created this project myself and really appreciate any feedback!  
 If you have questions, find a bug, or have suggestions for improvement, feel free to reach out or open an issue.
 
