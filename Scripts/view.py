@@ -297,18 +297,23 @@ class View:
         Initial method.
         1. check if backup from today already exists
         2. initialize TK vars
-        3. fill the combobox with destdir list
-        4. fill in specific paths for backup/clean
+        3. set last selected destPath
+        4. fill in specific paths for backup/clean/destDir
+        5. update infoString
         """
         if self.filehandler.backup_alreadyExists():
             self.update_log(f"Backup from today already exists.", "warning")
             self.update_log("=> For a backup the destination will be mirrored 1:1 with the source (including deletion of missing files).", "warning")
             self.logger.warning(f"Backup from today already exists. Mirroring active!!!")
             
-        self.last_destPath_selected = self.info_dict["last_selected_dest"]
-        self.destDir_var = tk.StringVar(value=self.last_destPath_selected)
-        self.BackupSize_var = tk.DoubleVar(value=0)
+        self.destDir_var = tk.StringVar()
+        self.BackupSize_var = tk.DoubleVar()
         
+        self.destDir_folders_list['values'] = self.destPaths_list
+        self.last_destPath_selected = self.info_dict["last_selected_dest"]
+        self.destDir_folders_list.set(self.last_destPath_selected)
+        self.destDir_var.set(self.last_destPath_selected)
+        self.edit_destDir() # call this to check if destPath exists
         
         for path in self.backupPaths_list:
             self.backup_folders_list.insert(tk.END, self.filehandler.visualize_path(path, short=True))
@@ -316,6 +321,10 @@ class View:
         clean_list = [] #TODO
         for path in clean_list:
             self.clean_folders_list.insert(tk.END, self.filehandler.visualize_path(path, short=True))
+        curValues = []
+        for path in self.destPaths_list:
+            curValues.append(self.filehandler.visualize_path(path))
+        self.destDir_folders_list['values'] = curValues
             
         self.update_infoString(self.last_destPath_selected)
             

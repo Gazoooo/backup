@@ -3,7 +3,6 @@ from view import View
 
 
 
-
 parser = argparse.ArgumentParser(description='A Backup Program.')
 parser.add_argument('--test', action='store_true', help="Activates test mode by setting the hostname to either 'test_win' or 'test_lin'.")
 parser.add_argument('--fast', action='store_true', help='Actibvates fast mode by making backups tasks directly')
