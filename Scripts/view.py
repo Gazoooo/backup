@@ -40,29 +40,28 @@ class View:
         try:
             self.filehandler.setup_logger()
         except Exception as e:
-            change_text(self.log, f"Couldn't create the log for this session. ({e})\nExiting program in 3s...", "error")
-            self.log.update_idletasks()
+            change_text(self.log_text, f"Couldn't create the log for this session. ({e})\nExiting program in 3s...", "error")
+            self.log_text.update_idletasks()
             time.sleep(3)
             exit()
         self.logger = logging.getLogger(__name__)
         
         #does user exists?
         self.filehandler.parse_yaml()
-        self.user_found = self.filehandler.search_user()
-        if not self.user_found:
+        if not self.filehandler.search_user():
             messagebox.showwarning("Warning", f"Unknown Host '{self.hostname}'.\nA standard profile for you is created.\nOtherwise you can change your hostname in your OS settings.")
             self.filehandler.add_Host()
             
         #create gui
-        self.backupfenster = tk.Tk()
+        self.root = tk.Tk()
         self.create_style()
-        self.backupfenster.configure(bg=self.color_palette[0])
-        self.backupfenster.title("PC Utils")
-        window_in_middle(self.backupfenster,1500,800)
+        self.root.configure(bg=self.color_palette[0])
+        self.root.title("PC Utils")
+        window_in_middle(self.root,1500,800)
         self.create_guiElements()
         self.filehandler.set_callback(self.update_log)
         atexit.register(self.cleanup)
-        self.destDir_folders_list.bind("<<ComboboxSelected>>", self.edit_destDir)
+        self.destDirs_combobox.bind("<<ComboboxSelected>>", self.edit_destDir)
         
         #set user settings from yaml
         self.info_dict, self.backupPaths_list, self.destPaths_list = self.filehandler.get_userContent()
@@ -94,9 +93,9 @@ class View:
         #print(self.last_made_clear_temp)
         #print(self.last_made_check_healthScan)
         
-        self.mainframe_choosing_task = tk.Frame(self.backupfenster, bg=self.color_palette[1], height=750, width=350)
+        self.mainframe_choosing_task = tk.Frame(self.root, bg=self.color_palette[1], height=750, width=350)
         self.mainframe_choosing_task.place(x=10,y=10)
-        self.mainframe_choosing_folders = tk.Frame(self.backupfenster, bg=self.color_palette[1], height=750, width=400)
+        self.mainframe_choosing_folders = tk.Frame(self.root, bg=self.color_palette[1], height=750, width=400)
         self.mainframe_choosing_folders.place(x=400, y=10)
 
         self.taskChoose = ttk.Label(self.mainframe_choosing_task, text=f"Choose tasks to complete.", 
@@ -119,55 +118,55 @@ class View:
         self.check_fileBackup.state(['!alternate', 'selected'])
         self.check_fileBackup.place(x=10, y=500)
         
-        self.confirm = tk.Button(self.mainframe_choosing_task, text ="Execute tasks",bg="green", command=self.go)
-        self.confirm.place(x=10,y=650)
-        self.stop = tk.Button(self.mainframe_choosing_task, text="Stop tasks", bg="red", command=self.stop_tasks)
-        self.stop.place(x=150,y=650)
-        self.stop.config(state="disabled")
+        self.confirm_button = tk.Button(self.mainframe_choosing_task, text ="Execute tasks",bg="green", command=self.go)
+        self.confirm_button.place(x=10,y=650)
+        self.stop_button = tk.Button(self.mainframe_choosing_task, text="Stop tasks", bg="red", command=self.stop_tasks)
+        self.stop_button.place(x=150,y=650)
+        self.stop_button.config(state="disabled")
         
-        self.backup_folders_list = tk.Listbox(self.mainframe_choosing_folders, width=47, height=10)
-        self.backup_folders_list.place(x=10,y=50)
-        self.clean_folders_list = tk.Listbox(self.mainframe_choosing_folders, width=47, height=10)
-        self.clean_folders_list.place(x=10,y=440)
-        self.destDir_folders_list = ttk.Combobox(self.backupfenster, height=10, state="readonly")
-        self.destDir_folders_list.place(x=1100,y=750)
+        self.backupDirs_listbox = tk.Listbox(self.mainframe_choosing_folders, width=47, height=10)
+        self.backupDirs_listbox.place(x=10,y=50)
+        self.cleanDirs_listbox = tk.Listbox(self.mainframe_choosing_folders, width=47, height=10)
+        self.cleanDirs_listbox.place(x=10,y=440)
+        self.destDirs_combobox = ttk.Combobox(self.root, height=10, state="readonly")
+        self.destDirs_combobox.place(x=1100,y=750)
 
-        self.add_folders_backup_button = tk.Button(self.mainframe_choosing_folders, bg=self.lightgreen, text="Add Folders to backup", 
-                                                   command=lambda: self.edit_folder("add", self.backup_folders_list, "paths.backup_paths"))
-        self.add_folders_backup_button.place(x=10,y=10)
-        self.remove_folders_backup_button = tk.Button(self.mainframe_choosing_folders, bg=self.lightred, text="Remove selected", 
-                                                      command=lambda: self.edit_folder("remove", self.backup_folders_list, "paths.backup_paths"))
-        self.remove_folders_backup_button.place(x=200,y=10)
-        self.add_folders_clean_button = tk.Button(self.mainframe_choosing_folders, text="Add Folders to clean (Not implemented)", bg=self.lightgreen,
-                                                  command=lambda: self.edit_folder("add", self.clean_folders_list, "paths.clean_paths"))
-        self.add_folders_clean_button.place(x=10,y=400)
-        self.add_folders_clean_button.config(state='disabled')
+        self.addBackupDir_button = tk.Button(self.mainframe_choosing_folders, bg=self.lightgreen, text="Add Folders to backup", 
+                                                   command=lambda: self.edit_folder("add", self.backupDirs_listbox, "paths.backup_paths"))
+        self.addBackupDir_button.place(x=10,y=10)
+        self.removeBackupDir_button = tk.Button(self.mainframe_choosing_folders, bg=self.lightred, text="Remove selected", 
+                                                      command=lambda: self.edit_folder("remove", self.backupDirs_listbox, "paths.backup_paths"))
+        self.removeBackupDir_button.place(x=200,y=10)
+        self.addCleanDir_button = tk.Button(self.mainframe_choosing_folders, text="Add Folders to clean (Not implemented)", bg=self.lightgreen,
+                                                  command=lambda: self.edit_folder("add", self.cleanDirs_listbox, "paths.clean_paths"))
+        self.addCleanDir_button.place(x=10,y=400)
+        self.addCleanDir_button.config(state='disabled')
 
         
-        self.add_destDir_button = tk.Button(self.backupfenster, bg=self.lightgreen, text="Add destDir", 
+        self.addDestDir_button = tk.Button(self.root, bg=self.lightgreen, text="Add destDir", 
                                             command=lambda: self.edit_destDir(mode="add"))
-        self.add_destDir_button.place(x=850,y=700)
-        self.remove_destDir_button = tk.Button(self.backupfenster, bg=self.lightred, text="Remove selected destDir", 
+        self.addDestDir_button.place(x=850,y=700)
+        self.removeDestDir_button = tk.Button(self.root, bg=self.lightred, text="Remove selected destDir", 
                                                command=lambda: self.edit_destDir(mode="remove"))
-        self.remove_destDir_button.place(x=850,y=750)
+        self.removeDestDir_button.place(x=850,y=750)
 
-        self.log = tk.Text(self.backupfenster, state="disabled", width=75, height=30)
-        self.log.place(x=850,y=10)
-        self.log.tag_configure("error", foreground="red")
-        self.log.tag_configure("warning", foreground="orange")
-        self.log.tag_configure("success", foreground="green")
+        self.log_text = tk.Text(self.root, state="disabled", width=75, height=30)
+        self.log_text.place(x=850,y=10)
+        self.log_text.tag_configure("error", foreground="red")
+        self.log_text.tag_configure("warning", foreground="orange")
+        self.log_text.tag_configure("success", foreground="green")
         
-        self.label_info = ttk.Label(self.backupfenster, text="", style="Custom.TLabel")
-        self.label_info.place(x=850,y=550)
+        self.info_label = ttk.Label(self.root, text="", style="Custom.TLabel")
+        self.info_label.place(x=850,y=550)
             
     def go(self):
         """
         Prepares the selected tasks by collecting information about the folders to back up, clean, or scan, 
         then passes the tasks to an executor for execution.
         """
-        self.confirm.config(state="disabled")
-        self.stop.config(state="normal")
-        change_text(self.log, "", clear=True)
+        self.confirm_button.config(state="disabled")
+        self.stop_button.config(state="normal")
+        change_text(self.log_text, "", clear=True)
         
         try:
             self.filehandler.write_yaml()
@@ -191,59 +190,59 @@ class View:
                 }
         except Exception as e:
             self.logger.error(f"go: {e}")
-            change_text(self.log, "Error at preparing. See 'Task-Log.log' for more information. Exit program in 3s...", "error")
-            self.log.update_idletasks()
+            change_text(self.log_text, "Error at preparing. See 'Task-Log.log' for more information. Exit program in 3s...", "error")
+            self.log_text.update_idletasks()
             time.sleep(3)
             exit()
-        change_text(self.log, "Successfully prepared everything.", "success")
+        change_text(self.log_text, "Successfully prepared everything.", "success")
 
         #start executor to execute tasks
         self.taskRunning = True
-        self.sc = ShellCommunicator(self.osType)
-        self.ex = Executor(self.sc, self.update_log, self.update_rdy)
-        self.ex.set_details(task_infos)
-        self.ex.start()
+        self.subprocesshandler = ShellCommunicator(self.osType)
+        self.executor = Executor(self.subprocesshandler, self.update_log, self.update_rdy)
+        self.executor.set_details(task_infos)
+        self.executor.start()
 
     def edit_destDir(self, event=None, mode=None):
         """
         Allows the user to select or remove a destination directory for backup. Updates the GUI and YAML file accordingly.
         """
-        self.confirm.config(state="normal")
+        self.confirm_button.config(state="normal")
         match mode:
             case "add":
-                folder = tk.filedialog.askdirectory(title="Select Destination", parent=self.backupfenster, initialdir=self.userPath)
+                folder = tk.filedialog.askdirectory(title="Select Destination", parent=self.root, initialdir=self.userPath)
                 if folder:
                     self.filehandler.update_yaml("paths.dest_paths", folder)
                     #append to combobox
-                    current_values = list(self.destDir_folders_list['values'])
+                    current_values = list(self.destDirs_combobox['values'])
                     if self.filehandler.visualize_path(folder) not in current_values:
                         current_values.append(self.filehandler.visualize_path(folder))
-                    self.destDir_folders_list['values'] = current_values
-                    self.destDir_folders_list.set(folder)
+                    self.destDirs_combobox['values'] = current_values
+                    self.destDirs_combobox.set(folder)
                     
             case "remove":
-                curDir = self.destDir_var.get()
-                values = list(self.destDir_folders_list['values'])
-                if curDir in values and len(values) > 1:
-                    values.remove(curDir)
-                    self.destDir_folders_list['values'] = values
-                    self.destDir_folders_list.set(values[0])
+                curDir = self.destDir_stringvar.get()
+                current_values = list(self.destDirs_combobox['values'])
+                if curDir in current_values and len(current_values) > 1:
+                    current_values.remove(curDir)
+                    self.destDirs_combobox['values'] = current_values
+                    self.destDirs_combobox.set(current_values[0])
                     self.filehandler.update_yaml("paths.dest_paths", curDir, delete=True)
                     
-        selected = self.destDir_folders_list.get() 
+        selected = self.destDirs_combobox.get() 
         if selected != "Choose your DestDir...": #something is selected
             if not os.path.exists(selected):
-                change_text(self.log, f"The selected path '{selected}' doesn't exists, ignored it!", "warning")
-                self.confirm.config(state="disabled")
+                change_text(self.log_text, f"The selected path '{selected}' doesn't exists, ignored it!", "warning")
+                self.confirm_button.config(state="disabled")
             else:
-                self.destDir_var.set(selected)
+                self.destDir_stringvar.set(selected)
                 self.update_infoString(selected)
                 self.filehandler.update_yaml("info.last_selected_dest", selected)
                 self.filehandler.backup_alreadyExists()
             
-        self.destDir_folders_list.set("Choose your DestDir...")
-        self.destDir_folders_list.selection_clear()
-        self.backupfenster.focus_set()
+        self.destDirs_combobox.set("Choose your DestDir...")
+        self.destDirs_combobox.selection_clear()
+        self.root.focus_set()
       
     def edit_folder(self, mode, refList, yaml_key):
         """
@@ -256,14 +255,14 @@ class View:
         """
         match mode:
             case "add":
-                folder = tk.filedialog.askdirectory(title="Select Folder", parent=self.backupfenster, initialdir=self.userPath)
+                folder = tk.filedialog.askdirectory(title="Select Folder", parent=self.root, initialdir=self.userPath)
                 if folder:
                     existing_folders = refList.get(0, tk.END) 
                     if self.filehandler.visualize_path(folder, short=True) not in existing_folders:
                         self.filehandler.update_yaml(yaml_key, folder)
                         refList.insert(tk.END, self.filehandler.visualize_path(folder, short=True))
                         if "backup" in yaml_key:
-                            self.BackupSize_var.set(self.BackupSize_var.get() + self.filehandler.get_size(folder))
+                            self.backupSize_doublevar.set(self.backupSize_doublevar.get() + self.filehandler.get_size(folder))
                     
             case "remove":
                 selection = refList.curselection()
@@ -276,9 +275,9 @@ class View:
                     #print(visual_path, path)
                     self.filehandler.update_yaml(yaml_key, path, delete=True)
                     if "backup" in yaml_key:
-                        self.BackupSize_var.set(self.BackupSize_var.get() - self.filehandler.get_size(path))
+                        self.backupSize_doublevar.set(self.backupSize_doublevar.get() - self.filehandler.get_size(path))
                         
-        self.update_infoString(self.destDir_var.get())
+        self.update_infoString(self.destDir_stringvar.get())
 
     def update_infoString(self, selectedDestPath):
         """
@@ -289,8 +288,8 @@ class View:
         """
         details_string = f"Device-Name: {self.hostname}\n"
         details_string += f"Selected destination: {self.filehandler.visualize_path(selectedDestPath)}\n"
-        details_string += f"Backup size: {self.BackupSize_var.get():.2f} GB\n"
-        self.label_info.config(text=details_string)
+        details_string += f"Backup size: {self.backupSize_doublevar.get():.2f} GB\n"
+        self.info_label.config(text=details_string)
         
     def data_init(self):
         """
@@ -306,25 +305,25 @@ class View:
             self.update_log("=> For a backup the destination will be mirrored 1:1 with the source (including deletion of missing files).", "warning")
             self.logger.warning(f"Backup from today already exists. Mirroring active!!!")
             
-        self.destDir_var = tk.StringVar()
-        self.BackupSize_var = tk.DoubleVar()
+        self.destDir_stringvar = tk.StringVar()
+        self.backupSize_doublevar = tk.DoubleVar()
         
-        self.destDir_folders_list['values'] = self.destPaths_list
+        self.destDirs_combobox['values'] = self.destPaths_list
         self.last_destPath_selected = self.info_dict["last_selected_dest"]
-        self.destDir_folders_list.set(self.last_destPath_selected)
-        self.destDir_var.set(self.last_destPath_selected)
+        self.destDirs_combobox.set(self.last_destPath_selected)
+        self.destDir_stringvar.set(self.last_destPath_selected)
         self.edit_destDir() # call this to check if destPath exists
         
         for path in self.backupPaths_list:
-            self.backup_folders_list.insert(tk.END, self.filehandler.visualize_path(path, short=True))
-            self.BackupSize_var.set(self.BackupSize_var.get() + self.filehandler.get_size(path))
+            self.backupDirs_listbox.insert(tk.END, self.filehandler.visualize_path(path, short=True))
+            self.backupSize_doublevar.set(self.backupSize_doublevar.get() + self.filehandler.get_size(path))
         clean_list = [] #TODO
         for path in clean_list:
-            self.clean_folders_list.insert(tk.END, self.filehandler.visualize_path(path, short=True))
+            self.cleanDirs_listbox.insert(tk.END, self.filehandler.visualize_path(path, short=True))
         curValues = []
         for path in self.destPaths_list:
             curValues.append(self.filehandler.visualize_path(path))
-        self.destDir_folders_list['values'] = curValues
+        self.destDirs_combobox['values'] = curValues
             
         self.update_infoString(self.last_destPath_selected)
             
@@ -333,14 +332,14 @@ class View:
         callback function for executor to be able to update gui log
         Updates the confirmation button state to either 'normal' or 'disabled' based on the execution process.
         """
-        change_text(self.log, text, tag=tag, clear=clear, update=update)
+        change_text(self.log_text, text, tag=tag, clear=clear, update=update)
     
     def update_rdy(self):
         """callback function for executor to be able to communicate that it is rdy
         """
         self.taskRunning = False
-        self.confirm.config(state="normal")
-        self.stop.config(state="disabled")
+        self.confirm_button.config(state="normal")
+        self.stop_button.config(state="disabled")
         
     def cleanup(self):
         """performs a cleanup with atexit()
@@ -352,13 +351,13 @@ class View:
         self.filehandler.write_yaml()  
         if self.taskRunning:
             self.stop_tasks() 
-        self.backupfenster.quit()
+        self.root.quit()
         
     def stop_tasks(self):
         """Stops all tasks.
         """
         if hasattr(self, 'ex'):
-            self.ex.stop_tasks()
+            self.executor.stop_tasks()
         
     def start(self):
-        self.backupfenster.mainloop()
+        self.root.mainloop()
