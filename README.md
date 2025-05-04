@@ -6,9 +6,6 @@ A lightweight tkinter GUI written in python to automate your backups.
 > - work in progress!
 > - at the moment only the backup task is implemented.
 > - at the moment only works with folders, not single files!
-> - a full `requirements.txt` will be added later
-
-
 
 <details>
   <summary>📑 Table of Contents</summary>
