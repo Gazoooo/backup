@@ -13,16 +13,16 @@ A lightweight tkinter GUI written in python to automate your backups.
 <details>
   <summary>📑 Table of Contents</summary>
   <ul>
-    <li><a href="#🌟-highlights">🌟 Highlights</a></li>
-    <li><a href="#▶️-usage">▶️ Usage</a></li>
+    <li><a href="#highlights">🌟 Highlights</a></li>
+    <li><a href="#usage">▶️ Usage</a></li>
     <li>
-      <a href="#🛠️-setup">🛠️ Setup</a>
+      <a href="#setup">🛠️ Setup</a>
       <ul>
         <li><a href="#prerequisites">Prerequisites</a></li>
         <li><a href="#installation">Installation</a></li>
       </ul>
     </li>
-    <li><a href="#💭-feedback">💭 Feedback</a></li>
+    <li><a href="#feedback">💭 Feedback</a></li>
   </ul>
 </details>
 
